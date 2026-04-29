@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 
 import { AtlasShell } from "@/components/shared/app-shell";
-import { TopicDeepDiveSurface } from "@/components/shared/flagship-surfaces";
-import { getChildTopics, getTopicBySlug } from "@/lib/content/curriculum";
+import { TopicHubSurface } from "@/components/shared/flagship-surfaces";
 import { getTopicContent } from "@/lib/content/topic-content";
+import { getLearnerDashboardView } from "@/lib/learner/learner-data";
 
 export default async function TopicPage({
   params,
@@ -11,23 +11,23 @@ export default async function TopicPage({
   params: Promise<{ topicSlug: string }>;
 }) {
   const { topicSlug } = await params;
-  const [topic, topicContent, childTopics] = await Promise.all([
-    getTopicBySlug(topicSlug),
+  const [{ dashboard }, topicContent] = await Promise.all([
+    getLearnerDashboardView(),
     getTopicContent(topicSlug),
-    getChildTopics(topicSlug),
   ]);
 
-  if (!topic) {
+  const summary = dashboard.summaries.find((entry) => entry.topic.slug === topicSlug);
+  if (!summary) {
     notFound();
   }
 
   return (
     <AtlasShell
-      description="The deep-dive page is the flagship study room: mission framing, prerequisite visibility, learning objectives, and long-form material in one place."
-      eyebrow="Topic Deep Dive"
-      title={topic.name}
+      description="Each topic is now a consistent hub with readiness, progress, and the same four actions: Learn, Quiz, Challenge, Review."
+      eyebrow="Topic Hub"
+      title={summary.topic.name}
     >
-      <TopicDeepDiveSurface childTopics={childTopics} topic={topic} topicContent={topicContent} />
+      <TopicHubSurface summary={summary} topicContent={topicContent} />
     </AtlasShell>
   );
 }

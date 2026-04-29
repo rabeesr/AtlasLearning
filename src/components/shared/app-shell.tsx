@@ -51,7 +51,7 @@ function ShellPanel({
 
 function LearnerNavigation() {
   return (
-    <div className="grid gap-4 lg:grid-cols-5">
+    <div className="grid gap-4 lg:grid-cols-3">
       {learnerNavGroups.map((group) => (
         <ShellPanel className="p-4" key={group.id}>
           <p className="text-[10px] uppercase tracking-[0.36em] text-[var(--atlas-accent)]">
@@ -168,11 +168,11 @@ export function AtlasShell({
                     Current framing
                   </p>
                   <p className="mt-3 font-[var(--atlas-font-display)] text-xl">
-                    {variant?.name ?? "Mission Control + Brainmap"}
+                    {variant?.name ?? "Learner dashboard + topic hubs"}
                   </p>
                   <p className="mt-2 text-sm leading-6 text-[var(--atlas-text-muted)]">
                     {variant?.tagline ??
-                      "Scientific operating system for learners who need topology, urgency, and next-step clarity."}
+                      "A curriculum-first flow: domain visibility on the dashboard, then consistent Learn, Quiz, Challenge, and Review actions inside each topic."}
                   </p>
                 </div>
                 {aside ? <div>{aside}</div> : null}
