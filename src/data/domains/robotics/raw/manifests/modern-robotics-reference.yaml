@@ -1,0 +1,13 @@
+id: modern-robotics-reference
+domain: robotics
+title: "Modern Robotics reference material"
+sourceType: article
+provenance: "https://modernrobotics.org/"
+parserId: manual-normalizer
+parserStatus: covered_by_existing_parser
+normalizationStatus: not_started
+linkedTopicSlugs:
+  - linear-algebra-robotics
+  - forward-kinematics
+  - inverse-kinematics
+notes: "Primary textbook-aligned source for future topic deep dives and worked examples."

@@ -1,0 +1,13 @@
+id: umich-online-courses
+domain: robotics
+title: "University of Michigan Robotics Online Courses"
+sourceType: article
+provenance: "https://robotics.umich.edu/academics/courses/online-courses/"
+parserId: manual-normalizer
+parserStatus: covered_by_existing_parser
+normalizationStatus: drafted
+linkedTopicSlugs:
+  - mathematics-foundations
+  - control-theory
+  - kinematics-dynamics
+notes: "Use as the top-level curriculum seeding reference while deeper lecture assets are gathered."

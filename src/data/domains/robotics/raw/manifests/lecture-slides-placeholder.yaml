@@ -1,0 +1,11 @@
+id: lecture-slides-placeholder
+domain: robotics
+title: "Incoming lecture slide decks"
+sourceType: powerpoint
+provenance: "Local raw assets to be added under src/data/domains/robotics/raw/assets/"
+parserStatus: needs_new_parser
+normalizationStatus: not_started
+linkedTopicSlugs:
+  - pid-controllers
+  - probability-statistics
+notes: "When a slide deck is added, either map it to an existing parser or create a new parser entry before extracting content."

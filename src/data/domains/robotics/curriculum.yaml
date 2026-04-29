@@ -1,0 +1,72 @@
+domain:
+  slug: robotics
+  name: Robotics
+  description: "Seed robotics curriculum for the first ATLAS scaffold"
+
+topics:
+  - slug: mathematics-foundations
+    name: "Mathematics Foundations"
+    description: "The mathematical language and tools used throughout robotics."
+    difficulty: beginner
+    estimated_minutes: 240
+    subtopics:
+      - slug: linear-algebra-robotics
+        name: "Linear Algebra for Robotics"
+        description: "Vectors, frames, matrices, and transformations."
+        difficulty: beginner
+        estimated_minutes: 90
+      - slug: calculus-robotics
+        name: "Calculus for Robotics"
+        description: "Rates of change, accumulation, and differential equations for motion."
+        difficulty: beginner
+        estimated_minutes: 90
+      - slug: probability-statistics
+        name: "Probability and Statistics"
+        description: "Core uncertainty tools that later support sensing and estimation."
+        difficulty: intermediate
+        estimated_minutes: 120
+
+  - slug: control-theory
+    name: "Control Theory"
+    description: "How robots regulate motion and stabilize behavior through feedback."
+    difficulty: intermediate
+    dependencies:
+      - mathematics-foundations
+    estimated_minutes: 180
+    subtopics:
+      - slug: feedback-loops
+        name: "Feedback Loops"
+        description: "Closed-loop reasoning and the anatomy of a controller."
+        difficulty: beginner
+        estimated_minutes: 60
+      - slug: pid-controllers
+        name: "PID Controllers"
+        description: "The canonical baseline controller for many robotics systems."
+        difficulty: intermediate
+        dependencies:
+          - feedback-loops
+          - calculus-robotics
+        estimated_minutes: 90
+
+  - slug: kinematics-dynamics
+    name: "Kinematics and Dynamics"
+    description: "Representing robot motion, geometry, and forces."
+    difficulty: intermediate
+    dependencies:
+      - mathematics-foundations
+    estimated_minutes: 220
+    subtopics:
+      - slug: forward-kinematics
+        name: "Forward Kinematics"
+        description: "Mapping joint configurations to positions and poses."
+        difficulty: intermediate
+        dependencies:
+          - linear-algebra-robotics
+        estimated_minutes: 90
+      - slug: inverse-kinematics
+        name: "Inverse Kinematics"
+        description: "Solving for configurations that achieve a desired pose."
+        difficulty: advanced
+        dependencies:
+          - forward-kinematics
+        estimated_minutes: 110
