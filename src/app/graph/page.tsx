@@ -1,5 +1,5 @@
 import { KnowledgeGraphPreview } from "@/components/graph/knowledge-graph-preview";
-import { AppShell } from "@/components/shared/app-shell";
+import { AtlasShell } from "@/components/shared/app-shell";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getCurriculumData } from "@/lib/content/curriculum";
 import { mockProgressRepository } from "@/lib/progress/mock-progress-repository";
@@ -9,15 +9,21 @@ export default async function GraphPage() {
   const progress = await mockProgressRepository.listTopicProgress(user.id);
 
   return (
-    <AppShell eyebrow="Knowledge Graph" title="Seeded topic structure and dependencies">
-      <div className="mb-6 rounded-[1.75rem] border border-[var(--card-border)] bg-[var(--card)] p-5 shadow-[var(--shadow)]">
-        <p className="text-sm leading-7 text-[var(--muted)]">
-          This scaffold uses a lightweight preview instead of React Flow for the initial pass. The
-          curriculum loader, slug model, and user-aware status boundaries are in place so the graph
-          renderer can later be swapped to React Flow without changing the content contracts.
-        </p>
+    <AtlasShell
+      description="The graph page stays lightweight for now, but the experience is framed as a live knowledge map rather than a scaffold demo."
+      eyebrow="Knowledge Graph"
+      title="See the topology before choosing the next study push."
+    >
+      <div className="grid gap-6">
+        <section className="rounded-[var(--atlas-radius-lg)] border border-[var(--atlas-border-strong)] bg-[var(--atlas-panel)] p-6 shadow-[var(--atlas-glow)]">
+          <p className="text-sm leading-7 text-[var(--atlas-text-muted)]">
+            Topic structure, dependencies, and learner state all resolve from the same curriculum
+            contracts. The visual renderer can become richer later without changing the educational
+            model beneath it.
+          </p>
+        </section>
+        <KnowledgeGraphPreview progress={progress} topics={curriculum.topics} />
       </div>
-      <KnowledgeGraphPreview progress={progress} topics={curriculum.topics} />
-    </AppShell>
+    </AtlasShell>
   );
 }

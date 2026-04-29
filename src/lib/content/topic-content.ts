@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 
@@ -34,5 +34,16 @@ export async function getTopicContent(topicSlug: string): Promise<TopicContent |
     };
   } catch {
     return null;
+  }
+}
+
+export async function listTopicContentSlugs(): Promise<string[]> {
+  try {
+    const entries = await readdir(topicsRoot, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+      .map((entry) => entry.name.replace(/\.md$/, ""));
+  } catch {
+    return [];
   }
 }

@@ -1,16 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f0e8;
-  --foreground: #1f2937;
-  --muted: #6b7280;
-  --card: rgba(255, 252, 247, 0.82);
-  --card-border: rgba(31, 41, 55, 0.08);
-  --accent: #0f766e;
-  --accent-strong: #155e75;
-  --accent-soft: rgba(15, 118, 110, 0.14);
-  --warning: #b45309;
-  --shadow: 0 18px 45px rgba(31, 41, 55, 0.08);
+  --page-bg: #07111f;
+  --page-fg: #edf4ff;
 }
 
 * {
@@ -24,12 +16,9 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 26%),
-    radial-gradient(circle at top right, rgba(245, 158, 11, 0.14), transparent 28%),
-    linear-gradient(180deg, #fcfaf6 0%, var(--background) 100%);
-  color: var(--foreground);
-  font-family: Georgia, "Times New Roman", serif;
+  background: var(--page-bg);
+  color: var(--page-fg);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
 }
 
 a {
@@ -39,4 +28,59 @@ a {
 
 pre {
   overflow-x: auto;
+}
+
+.atlas-background {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(109, 226, 255, 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(177, 245, 119, 0.08), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 22%),
+    linear-gradient(180deg, var(--atlas-bg) 0%, var(--atlas-bg-alt) 100%);
+  position: relative;
+}
+
+.atlas-background::before {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-position: center;
+  background-size: 64px 64px;
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.atlas-prose {
+  color: var(--atlas-text-muted);
+  font-family: var(--atlas-font-body);
+}
+
+.atlas-prose h1,
+.atlas-prose h2,
+.atlas-prose h3,
+.atlas-prose h4 {
+  color: var(--atlas-text);
+  font-family: var(--atlas-font-display);
+}
+
+.atlas-prose p,
+.atlas-prose li,
+.atlas-prose blockquote {
+  line-height: 1.9;
+}
+
+.atlas-prose code {
+  background: var(--atlas-panel-muted);
+  border: 1px solid var(--atlas-border);
+  border-radius: 999px;
+  font-family: var(--atlas-font-mono);
+  padding: 0.12rem 0.45rem;
+}
+
+.atlas-prose pre code {
+  border-radius: 18px;
+  display: block;
+  padding: 1rem;
 }

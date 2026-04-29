@@ -1,4 +1,3 @@
-import type { Route } from "next";
 import Link from "next/link";
 
 import type { CurriculumTopic } from "@/types/domain";
@@ -8,13 +7,21 @@ function statusForTopic(topic: CurriculumTopic, progress: TopicProgress[]) {
   return progress.find((entry) => entry.topicSlug === topic.slug)?.status ?? "locked";
 }
 
-const statusStyles: Record<string, string> = {
-  available: "border-emerald-400/40 bg-emerald-100/70 text-emerald-900",
-  completed: "border-teal-500/40 bg-teal-100/70 text-teal-900",
-  decaying: "border-amber-500/40 bg-amber-100/70 text-amber-900",
-  in_progress: "border-sky-500/40 bg-sky-100/70 text-sky-900",
-  locked: "border-slate-300/60 bg-slate-100/80 text-slate-500",
-};
+function statusClasses(status: string) {
+  if (status === "completed") {
+    return "border-[color:color-mix(in_srgb,var(--atlas-success)_45%,transparent)] text-[var(--atlas-success)]";
+  }
+  if (status === "in_progress") {
+    return "border-[color:color-mix(in_srgb,var(--atlas-accent)_45%,transparent)] text-[var(--atlas-accent)]";
+  }
+  if (status === "decaying") {
+    return "border-[color:color-mix(in_srgb,var(--atlas-warning)_45%,transparent)] text-[var(--atlas-warning)]";
+  }
+  if (status === "available") {
+    return "border-[color:color-mix(in_srgb,var(--atlas-accent-strong)_45%,transparent)] text-[var(--atlas-accent-strong)]";
+  }
+  return "border-[var(--atlas-border)] text-[var(--atlas-text-muted)]";
+}
 
 export function KnowledgeGraphPreview({
   topics,
@@ -26,43 +33,47 @@ export function KnowledgeGraphPreview({
   const broadTopics = topics.filter((topic) => topic.parentSlug === null);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
-      {broadTopics.map((topic) => {
+    <div className="grid gap-6 xl:grid-cols-3">
+      {broadTopics.map((topic, index) => {
         const children = topics.filter((child) => child.parentSlug === topic.slug);
         const status = statusForTopic(topic, progress);
 
         return (
           <section
-            className="rounded-[1.75rem] border border-[var(--card-border)] bg-[var(--card)] p-5 shadow-[var(--shadow)]"
+            className="rounded-[var(--atlas-radius-lg)] border border-[var(--atlas-border)] bg-[var(--atlas-panel)] p-5 shadow-[var(--atlas-shadow)]"
             key={topic.slug}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">
-                  {topic.difficulty}
+                <p className="text-[10px] uppercase tracking-[0.34em] text-[var(--atlas-accent)]">
+                  Pillar 0{index + 1}
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold">{topic.name}</h2>
+                <h2 className="mt-3 font-[var(--atlas-font-display)] text-3xl">{topic.name}</h2>
               </div>
               <span
-                className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.18em] ${statusStyles[status]}`}
+                className={`rounded-full border px-3 py-1 font-[var(--atlas-font-mono)] text-xs uppercase tracking-[0.18em] ${statusClasses(status)}`}
               >
                 {status.replace("_", " ")}
               </span>
             </div>
-            <p className="mt-3 text-sm leading-7 text-[var(--muted)]">{topic.description}</p>
-            <ul className="mt-5 space-y-3">
+            <p className="mt-4 text-sm leading-7 text-[var(--atlas-text-muted)]">{topic.description}</p>
+            <div className="mt-5 space-y-3">
               {children.map((child) => (
-                <li
-                  className="rounded-2xl border border-[var(--card-border)] bg-white/65 px-4 py-3"
+                <Link
+                  className="block rounded-[var(--atlas-radius)] border border-[var(--atlas-border)] bg-[var(--atlas-panel-muted)] px-4 py-4 transition hover:border-[var(--atlas-border-strong)] hover:bg-[var(--atlas-accent-soft)]"
+                  href={`/topics/${child.slug}`}
                   key={child.slug}
                 >
-                  <Link className="font-medium hover:text-[var(--accent)]" href={`/topics/${child.slug}` as Route}>
-                    {child.name}
-                  </Link>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{child.description}</p>
-                </li>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-semibold">{child.name}</p>
+                    <span className="font-[var(--atlas-font-mono)] text-xs text-[var(--atlas-text-muted)]">
+                      {child.difficulty}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-[var(--atlas-text-muted)]">{child.description}</p>
+                </Link>
               ))}
-            </ul>
+            </div>
           </section>
         );
       })}
