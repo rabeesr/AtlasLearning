@@ -22,33 +22,37 @@ export function Toolbar() {
 
   function navLinkClass(active: boolean) {
     return [
-      "h-full px-3 inline-flex items-center font-mono uppercase tracking-[0.12em] text-[11px] border-b-2 transition-colors duration-100",
+      "inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all duration-200 ease-out",
       active
-        ? "text-[var(--ink-strong)] border-[var(--accent)]"
-        : "text-[var(--ink-muted)] border-transparent hover:text-[var(--ink)] hover:border-[var(--rule-soft)]",
+        ? "bg-[var(--tile)] text-[var(--ink-strong)] font-semibold"
+        : "text-[var(--ink-muted)] hover:bg-[var(--tile)] hover:text-[var(--ink)]",
     ].join(" ");
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--ink)] bg-[var(--bg-white)]/85 backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-stretch gap-0 px-4 md:px-8">
+    <header className="sticky top-0 z-30 bg-[var(--bg)]/80 backdrop-blur-xl">
+      <div className="mx-auto flex h-20 w-full max-w-[1400px] items-center gap-4 px-4 md:px-8">
         <Link
           href="/dashboard"
-          className="flex items-center gap-3 pr-5 mr-2 border-r border-[var(--ink)]"
+          className="group flex items-center gap-2.5 transition-opacity duration-200 hover:opacity-80"
           aria-label="ATLAS Learning home"
         >
-          <span className="block h-9 w-[60px] border border-[var(--ink)] bg-[var(--bg-white)] overflow-hidden relative">
+          <span className="relative block h-14 w-14 overflow-hidden rounded-[14px]">
             <Image
               src="/atlas-logo.png"
-              alt="ATLAS Learning"
+              alt=""
               fill
-              sizes="60px"
+              sizes="56px"
               priority
               className="object-cover"
             />
           </span>
+          <span className="text-[17px] font-semibold tracking-tight text-[var(--ink-strong)]">
+            ATLAS
+          </span>
         </Link>
-        <nav className="flex flex-1 items-stretch gap-0">
+
+        <nav className="ml-2 flex flex-1 items-center gap-1">
           {primaryLinks.map((link) => (
             <Link
               key={link.href}
@@ -59,10 +63,8 @@ export function Toolbar() {
             </Link>
           ))}
         </nav>
-        <Link
-          href="/settings"
-          className={navLinkClass(isActive("/settings"))}
-        >
+
+        <Link href="/settings" className={navLinkClass(isActive("/settings"))}>
           Settings
         </Link>
       </div>

@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  /* === Surfaces (Apple white + light gray) === */
-  --bg: #FFFFFF;            /* pure white canvas */
-  --bg-alt: #FBFBFD;        /* very subtle deeper white for section bands */
-  --tile: #F5F5F7;           /* Apple's tile gray */
-  --tile-deep: #EEEEF1;     /* slightly deeper tile (hover lift target) */
+  /* === Surfaces (slate-blue canvas, white tiles for contrast) === */
+  --bg: #D9E2EF;            /* slate-blue canvas */
+  --bg-alt: #E3EAF4;        /* slightly lighter section band */
+  --tile: #FFFFFF;          /* white tile — clean contrast against slate bg */
+  --tile-deep: #F1F4F9;     /* deeper tile / progress track */
 
   /* legacy aliases — old code still references these */
   --panel: #F5F5F7;
@@ -184,24 +184,25 @@ input, textarea, select {
     transform var(--duration) var(--ease-out),
     box-shadow var(--duration) var(--ease-out),
     background-color var(--duration) var(--ease-out);
+  /* Default invisible ring so transition-on-hover is smooth */
+  box-shadow: 0 0 0 1px transparent;
   will-change: transform;
 }
 
-.tile-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-  background: var(--bg);
+.tile-hover:hover,
+.tile-link:hover {
+  transform: translateY(-4px);
+  /* Prominent slate-blue ring + deep drop shadow */
+  box-shadow:
+    0 0 0 1.5px rgba(51, 65, 85, 0.28),
+    0 28px 56px rgba(15, 23, 42, 0.22),
+    0 12px 24px rgba(15, 23, 42, 0.14),
+    0 4px 8px rgba(15, 23, 42, 0.08);
 }
 
 .tile-link {
   display: block;
   cursor: pointer;
-}
-
-.tile-link:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-  background: var(--bg);
 }
 
 /* === Editorial prose === */

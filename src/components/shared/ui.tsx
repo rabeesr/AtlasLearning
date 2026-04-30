@@ -1,33 +1,38 @@
 import type { ReactNode } from "react";
 
 /**
- * Card — flat, square, ink hairline. No shadow, no radius.
+ * Card — borderless tile (Apple-style). Soft gray background, generous radius.
+ * Pass `interactive` (or wrap in a Link/button) to opt into the hover lift.
  */
 export function Card({
   children,
   className = "",
-  variant = "white",
+  variant = "tile",
+  interactive = true,
 }: {
   children: ReactNode;
   className?: string;
-  variant?: "white" | "cream" | "paper";
+  variant?: "tile" | "white" | "deep";
+  interactive?: boolean;
 }) {
   const bg =
-    variant === "cream"
-      ? "bg-[var(--bg)]"
-      : variant === "paper"
-        ? "bg-[var(--bg-paper)]"
-        : "bg-[var(--bg-white)]";
+    variant === "white"
+      ? "bg-white"
+      : variant === "deep"
+        ? "bg-[var(--tile-deep)]"
+        : "bg-[var(--tile)]";
   return (
-    <div className={`border border-[var(--ink)] ${bg} p-5 ${className}`}>
+    <div
+      className={`tile ${interactive ? "tile-hover" : ""} ${bg} p-6 md:p-7 ${className}`}
+    >
       {children}
     </div>
   );
 }
 
 /**
- * SectionHeader — numbered editorial header. Mono eyebrow + display headline.
- * Optional `index` renders as `01 — EYEBROW` mono numeric prefix.
+ * SectionHeader — large display headline with optional eyebrow.
+ * No dividing rule — whitespace handles separation.
  */
 export function SectionHeader({
   eyebrow,
@@ -44,23 +49,21 @@ export function SectionHeader({
 }) {
   const eyebrowText = eyebrow
     ? index !== undefined
-      ? `${String(index).padStart(2, "0")} — ${eyebrow}`
+      ? `${String(index).padStart(2, "0")} · ${eyebrow}`
       : eyebrow
     : index !== undefined
       ? String(index).padStart(2, "0")
       : null;
 
   return (
-    <div className="mb-8 flex flex-col gap-3 border-b border-[var(--ink)] pb-5 md:flex-row md:items-end md:justify-between">
+    <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
-        {eyebrowText ? (
-          <p className="eyebrow-mono">{eyebrowText}</p>
-        ) : null}
-        <h1 className="display-headline mt-2 text-[1.75rem] md:text-[2.25rem]">
+        {eyebrowText ? <p className="eyebrow">{eyebrowText}</p> : null}
+        <h1 className="display-headline mt-2 text-[2rem] md:text-[2.75rem]">
           {title}
         </h1>
         {description ? (
-          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--ink-muted)]">
+          <p className="mt-3 max-w-2xl text-[16px] leading-7 text-[var(--ink-muted)]">
             {description}
           </p>
         ) : null}
@@ -71,7 +74,7 @@ export function SectionHeader({
 }
 
 /**
- * ProgressBar — square, 1px ink rule + ink fill. No radius, no gradient.
+ * ProgressBar — pill-rounded, ink fill on tile-gray track.
  */
 export function ProgressBar({
   value,
@@ -93,10 +96,10 @@ export function ProgressBar({
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div
-      className={`relative h-[6px] w-full border border-[var(--ink)] bg-[var(--bg-white)] ${className}`}
+      className={`h-1.5 w-full overflow-hidden rounded-full bg-[var(--tile-deep)] ${className}`}
     >
       <div
-        className="h-full"
+        className="h-full rounded-full transition-[width] duration-500 ease-out"
         style={{ width: `${clamped}%`, backgroundColor: fill }}
       />
     </div>
@@ -104,7 +107,7 @@ export function ProgressBar({
 }
 
 /**
- * Badge — flat hairline box, mono uppercase label.
+ * Badge — pill, soft tonal fill, no border.
  */
 export function Badge({
   children,
@@ -114,15 +117,15 @@ export function Badge({
   tone?: "neutral" | "accent" | "success" | "warning" | "danger";
 }) {
   const styles: Record<string, string> = {
-    neutral: "border-[var(--ink)] bg-transparent text-[var(--ink)]",
-    accent: "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent-strong)]",
-    success: "border-[var(--success)] bg-transparent text-[var(--success)]",
-    warning: "border-[var(--warning)] bg-transparent text-[var(--warning)]",
-    danger: "border-[var(--danger)] bg-transparent text-[var(--danger)]",
+    neutral: "bg-[var(--tile)] text-[var(--ink-muted)]",
+    accent: "bg-[var(--accent-soft)] text-[var(--accent)]",
+    success: "bg-[color-mix(in_srgb,var(--success)_12%,transparent)] text-[var(--success)]",
+    warning: "bg-[color-mix(in_srgb,var(--warning)_14%,transparent)] text-[var(--warning)]",
+    danger: "bg-[color-mix(in_srgb,var(--danger)_12%,transparent)] text-[var(--danger)]",
   };
   return (
     <span
-      className={`inline-flex items-center gap-1 border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em] ${styles[tone]}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.02em] ${styles[tone]}`}
     >
       {children}
     </span>
@@ -130,7 +133,7 @@ export function Badge({
 }
 
 /**
- * Stat — large display number on a flat card with mono label.
+ * Stat — large display number on a tile.
  */
 export function Stat({
   label,
@@ -142,18 +145,18 @@ export function Stat({
   detail?: string;
 }) {
   return (
-    <Card className="flex flex-col gap-3">
-      <p className="eyebrow-mono">{label}</p>
-      <p className="display-headline text-[2.25rem] tabular-nums">{value}</p>
+    <Card>
+      <p className="eyebrow">{label}</p>
+      <p className="display-headline mt-3 text-[2.5rem] tabular-nums">{value}</p>
       {detail ? (
-        <p className="text-xs leading-5 text-[var(--ink-muted)]">{detail}</p>
+        <p className="mt-2 text-[13px] leading-5 text-[var(--ink-muted)]">{detail}</p>
       ) : null}
     </Card>
   );
 }
 
 /**
- * Button — square, ink-filled by default. Hover inverts. No transitions over 120ms.
+ * Button — pill, ink-filled by default, soft hover.
  */
 export function Button({
   children,
@@ -173,17 +176,18 @@ export function Button({
   className?: string;
 }) {
   const base =
-    "inline-flex items-center justify-center font-mono uppercase tracking-[0.08em] border transition-colors duration-100 ease-out";
-  const sizing = size === "sm" ? "h-7 px-3 text-[11px]" : "h-9 px-4 text-[12px]";
+    "inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 ease-out";
+  const sizing =
+    size === "sm" ? "h-8 px-4 text-[13px]" : "h-11 px-6 text-[15px]";
   const variants: Record<string, string> = {
     primary:
-      "bg-[var(--ink)] text-[var(--bg-white)] border-[var(--ink)] hover:bg-[var(--bg-white)] hover:text-[var(--ink)]",
+      "bg-[var(--ink)] text-white hover:bg-black hover:scale-[1.02] active:scale-[0.99]",
     secondary:
-      "bg-transparent text-[var(--ink)] border-[var(--ink)] hover:bg-[var(--ink)] hover:text-[var(--bg-white)]",
+      "bg-[var(--tile)] text-[var(--ink)] hover:bg-[var(--tile-deep)] hover:scale-[1.02] active:scale-[0.99]",
     ghost:
-      "bg-transparent text-[var(--ink)] border-transparent hover:border-[var(--ink)]",
+      "bg-transparent text-[var(--ink)] hover:bg-[var(--tile)]",
     accent:
-      "bg-[var(--accent)] text-[var(--bg-white)] border-[var(--accent)] hover:bg-[var(--accent-strong)] hover:border-[var(--accent-strong)]",
+      "bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)] hover:scale-[1.02] active:scale-[0.99]",
   };
   const classes = `${base} ${sizing} ${variants[variant]} ${className}`;
 
@@ -202,53 +206,23 @@ export function Button({
 }
 
 /**
- * SectionBand — full-bleed alternating section background.
- * Use inside a page; it breaks out of any max-width container via negative margins.
+ * SectionBand — full-bleed alternating-tone section band. Generous vertical padding.
  */
 export function SectionBand({
   children,
-  variant = "cream",
+  variant = "white",
   className = "",
 }: {
   children: ReactNode;
-  variant?: "cream" | "paper";
+  variant?: "white" | "tile";
   className?: string;
 }) {
-  const bg = variant === "paper" ? "bg-[var(--bg-paper)]" : "bg-[var(--bg)]";
+  const bg = variant === "tile" ? "bg-[var(--tile)]" : "bg-white";
   return (
     <section
-      className={`section-band ${bg} -mx-4 px-4 py-10 md:-mx-8 md:px-8 md:py-14 ${className}`}
+      className={`${bg} -mx-4 px-4 py-16 md:-mx-8 md:px-8 md:py-24 ${className}`}
     >
       {children}
     </section>
-  );
-}
-
-/**
- * CornerMarks — Palantir-style L-tick registration marks at the four corners,
- * with an optional mono coordinate label in the top-right.
- *
- * Usage: wrap content. Children render inside a `position: relative` container.
- */
-export function CornerMarks({
-  children,
-  label,
-  className = "",
-}: {
-  children: ReactNode;
-  label?: string;
-  className?: string;
-}) {
-  return (
-    <div className={`corner-marks ${className}`}>
-      {children}
-      <span className="corner-marks__bl" aria-hidden />
-      <span className="corner-marks__br" aria-hidden />
-      {label ? (
-        <span className="coordinate pointer-events-none absolute right-2 top-2">
-          {label}
-        </span>
-      ) : null}
-    </div>
   );
 }
