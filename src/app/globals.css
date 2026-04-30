@@ -1,21 +1,40 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #07111f;
-  --bg-alt: #0d1c31;
-  --panel: rgba(12, 24, 42, 0.88);
-  --panel-alt: rgba(18, 34, 57, 0.92);
-  --panel-muted: rgba(109, 148, 196, 0.12);
-  --border: rgba(113, 171, 245, 0.18);
-  --border-strong: rgba(113, 171, 245, 0.38);
-  --text: #edf4ff;
-  --text-muted: #98abc9;
-  --accent: #6de2ff;
-  --accent-strong: #b1f577;
-  --accent-soft: rgba(109, 226, 255, 0.16);
-  --success: #5cf2b5;
-  --warning: #ffba5c;
-  --danger: #ff7b7b;
+  /* Surfaces */
+  --bg: #F8FAFC;
+  --bg-alt: #F1F5F9;
+  --panel: #FFFFFF;
+  --panel-alt: #F8FAFC;
+  --panel-muted: #F1F5F9;
+
+  /* Lines */
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+
+  /* Type */
+  --text: #1E293B;        /* slate-800 */
+  --text-strong: #0F172A; /* slate-900 */
+  --text-muted: #64748B;  /* slate-500 */
+
+  /* Brand */
+  --accent: #1E40AF;        /* indigo-800 — primary */
+  --accent-strong: #1E3A8A;
+  --accent-soft: #EEF2FF;   /* indigo-50 */
+
+  /* CTA / highlight */
+  --cta: #D97706;           /* amber-600 */
+  --cta-strong: #B45309;
+  --cta-soft: #FEF3C7;      /* amber-100 */
+
+  /* Status */
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+
+  /* Shadow */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-hover: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -24,6 +43,7 @@
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
@@ -31,7 +51,9 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
-  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  font-family: "Inter", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -43,43 +65,63 @@ pre {
   overflow-x: auto;
 }
 
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 .atlas-background {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(109, 226, 255, 0.10), transparent 24%),
-    radial-gradient(circle at top right, rgba(177, 245, 119, 0.06), transparent 18%),
-    linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+  background: var(--bg);
   position: relative;
 }
 
 .atlas-prose {
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .atlas-prose h1,
 .atlas-prose h2,
 .atlas-prose h3,
 .atlas-prose h4 {
-  color: var(--text);
+  color: var(--text-strong);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
+
+.atlas-prose h1 { font-size: 1.6rem; margin-top: 0; margin-bottom: 1rem; }
+.atlas-prose h2 { font-size: 1.25rem; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+.atlas-prose h3 { font-size: 1.05rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
 
 .atlas-prose p,
 .atlas-prose li,
 .atlas-prose blockquote {
-  line-height: 1.85;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.atlas-prose ul, .atlas-prose ol {
+  padding-left: 1.25rem;
 }
 
 .atlas-prose code {
   background: var(--panel-muted);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 4px;
   font-family: "SFMono-Regular", "Menlo", monospace;
-  padding: 0.12rem 0.45rem;
-  font-size: 0.9em;
+  padding: 0.08rem 0.35rem;
+  font-size: 0.88em;
+  color: var(--accent);
 }
 
 .atlas-prose pre code {
-  border-radius: 12px;
+  border-radius: 8px;
   display: block;
-  padding: 1rem;
+  padding: 0.85rem 1rem;
+  background: #0F172A;
+  color: #E2E8F0;
+  border: none;
+  font-size: 0.85em;
 }
+
+.atlas-prose strong { color: var(--text-strong); font-weight: 600; }
+.atlas-prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
