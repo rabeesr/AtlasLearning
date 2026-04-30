@@ -4,16 +4,23 @@ import type { ReactNode } from "react";
  * Card — borderless tile (Apple-style). Soft gray background, generous radius.
  * Pass `interactive` (or wrap in a Link/button) to opt into the hover lift.
  */
+export type CardSwatch = {
+  bg: string;
+  hover: string;
+};
+
 export function Card({
   children,
   className = "",
   variant = "tile",
   interactive = true,
+  swatch,
 }: {
   children: ReactNode;
   className?: string;
   variant?: "tile" | "white" | "deep";
   interactive?: boolean;
+  swatch?: CardSwatch;
 }) {
   const bg =
     variant === "white"
@@ -21,9 +28,16 @@ export function Card({
       : variant === "deep"
         ? "bg-[var(--tile-deep)]"
         : "bg-[var(--tile)]";
+  const swatchStyle = swatch
+    ? ({
+        backgroundColor: swatch.bg,
+        ["--tile-hover" as string]: swatch.hover,
+      } as React.CSSProperties)
+    : undefined;
   return (
     <div
-      className={`tile ${interactive ? "tile-hover" : ""} ${bg} p-6 md:p-7 ${className}`}
+      className={`tile ${interactive ? "tile-hover" : ""} ${swatch ? "" : bg} p-6 md:p-7 ${className}`}
+      style={swatchStyle}
     >
       {children}
     </div>
@@ -63,7 +77,7 @@ export function SectionHeader({
           {title}
         </h1>
         {description ? (
-          <p className="mt-3 max-w-2xl text-[16px] leading-7 text-[var(--ink-muted)]">
+          <p className="mt-3 max-w-2xl text-[18px] leading-[1.65] text-[var(--ink-muted)]">
             {description}
           </p>
         ) : null}
@@ -125,7 +139,7 @@ export function Badge({
   };
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium tracking-[0.02em] ${styles[tone]}`}
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[13px] font-medium tracking-[0.01em] ${styles[tone]}`}
     >
       {children}
     </span>
@@ -139,17 +153,31 @@ export function Stat({
   label,
   value,
   detail,
+  swatch,
+  swatchLabel,
 }: {
   label: string;
   value: string | number;
   detail?: string;
+  swatch?: CardSwatch;
+  swatchLabel?: string;
 }) {
   return (
-    <Card>
-      <p className="eyebrow">{label}</p>
+    <Card swatch={swatch}>
+      {swatchLabel ? (
+        <p
+          className="eyebrow-mono mb-3 inline-block rounded-full px-2.5 py-1 text-[10px]"
+          style={{ background: "rgba(15,23,42,0.10)", color: "#0F172A" }}
+        >
+          {swatchLabel}
+        </p>
+      ) : null}
+      <p className="text-[12px] font-semibold uppercase tracking-[0.30em] text-[var(--accent)]">
+        {label}
+      </p>
       <p className="display-headline mt-3 text-[2.5rem] tabular-nums">{value}</p>
       {detail ? (
-        <p className="mt-2 text-[13px] leading-5 text-[var(--ink-muted)]">{detail}</p>
+        <p className="mt-2 text-[15px] leading-6 text-[var(--ink-muted)]">{detail}</p>
       ) : null}
     </Card>
   );

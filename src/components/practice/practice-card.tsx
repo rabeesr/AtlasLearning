@@ -17,14 +17,27 @@ export function PracticeCard({
     .filter((t): t is CurriculumTopic => Boolean(t));
   const isCrossTopic = item.topicSlugs.length > 1;
 
+  const titleNode =
+    item.kind === "challenge" ? (
+      <Link
+        href={`/challenges/${item.slug}`}
+        className="mt-1 block text-base font-semibold text-[var(--text)] transition hover:text-[var(--accent)]"
+        aria-label={`Open challenge: ${item.title}`}
+      >
+        {item.title}
+      </Link>
+    ) : (
+      <h3 className="mt-1 text-base font-semibold text-[var(--text)]">{item.title}</h3>
+    );
+
   return (
     <Card className="flex h-full flex-col gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--accent)]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.30em] text-[var(--accent)]">
             {KIND_LABEL[item.kind]}
           </p>
-          <h3 className="mt-1 text-base font-semibold text-[var(--text)]">{item.title}</h3>
+          {titleNode}
         </div>
         {isCrossTopic ? (
           <Badge tone="accent">spans {item.topicSlugs.length} topics</Badge>

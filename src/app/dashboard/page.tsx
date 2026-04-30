@@ -68,25 +68,25 @@ export default async function DashboardPage() {
                 <div className="flex items-start justify-between gap-2">
                   <Link
                     href={`/topics/${summary.topic.slug}`}
-                    className="text-sm font-semibold text-[var(--text)] hover:text-[var(--accent)]"
+                    className="text-[12px] font-semibold uppercase tracking-[0.30em] text-[var(--accent)] transition hover:text-[var(--accent-strong)]"
                   >
                     {summary.topic.name}
                   </Link>
                   <Badge tone="danger">Decaying</Badge>
                 </div>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-[15px] leading-6 text-[var(--text-muted)]">
                   Proficiency at {summary.proficiencyScore}%. Run a quick review or quiz.
                 </p>
-                <div className="mt-1 flex gap-2 text-xs">
+                <div className="mt-1 flex gap-2 text-[14px]">
                   <Link
                     href={`/topics/${summary.topic.slug}/quizzes`}
-                    className="rounded-md border border-[var(--border)] px-2 py-1 text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
                   >
                     Quiz now
                   </Link>
                   <Link
                     href={`/topics/${summary.topic.slug}/learn`}
-                    className="rounded-md border border-[var(--border)] px-2 py-1 text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
+                    className="rounded-md border border-[var(--border)] px-3 py-1.5 text-[var(--text-muted)] hover:border-[var(--border-strong)] hover:text-[var(--text)]"
                   >
                     Re-read
                   </Link>

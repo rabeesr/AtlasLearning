@@ -32,12 +32,12 @@ export function TopicProficiencyGrid({
               <div>
                 <Link
                   href={`/topics/${summary.topic.slug}`}
-                  className="text-base font-semibold text-[var(--text)] transition hover:text-[var(--accent)]"
+                  className="text-[12px] font-semibold uppercase tracking-[0.30em] text-[var(--accent)] transition hover:text-[var(--accent-strong)]"
                 >
                   {summary.topic.name}
                 </Link>
                 {summary.topic.branch ? (
-                  <p className="mt-1 text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
+                  <p className="mt-1 text-[12px] uppercase tracking-wider text-[var(--text-muted)]">
                     {summary.topic.branch}
                   </p>
                 ) : null}
@@ -46,12 +46,12 @@ export function TopicProficiencyGrid({
             </div>
             <div className="flex items-center gap-3">
               <ProgressBar value={summary.proficiencyScore} tone={tone} className="flex-1" />
-              <span className="text-sm tabular-nums text-[var(--text-muted)]">
+              <span className="text-[15px] tabular-nums text-[var(--text-muted)]">
                 {summary.proficiencyScore}%
               </span>
             </div>
             {subSummaries.length > 0 ? (
-              <ul className="mt-1 space-y-1.5 border-t border-[var(--border)] pt-3 text-xs">
+              <ul className="mt-1 space-y-2 border-t border-[var(--border)] pt-3 text-[14px]">
                 {subSummaries.slice(0, 5).map((sub) => (
                   <li key={sub.topic.slug} className="flex items-center justify-between gap-2">
                     <Link

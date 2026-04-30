@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  /* === Surfaces (slate-blue canvas, deeper slate tiles for inset depth) === */
-  --bg: #D9E2EF;            /* slate-blue canvas */
-  --bg-alt: #E3EAF4;        /* slightly lighter section band */
-  --tile: #C7D1E0;          /* deeper slate tile — sits inset against canvas */
-  --tile-deep: #B8C4D6;     /* deepest slate / progress track */
-  --tile-hover: #E8EEF7;    /* hover lift target — brighter than canvas */
+  /* === Surfaces (Steel Sky — pushed bluer) === */
+  --bg: #CCDDF2;            /* canvas — bluer */
+  --bg-alt: #DBE7F6;        /* slightly lighter section band */
+  --tile: #B9CDE8;          /* inset slate-blue tile — bluer */
+  --tile-deep: #A3BBD9;     /* deepest tile / progress track */
+  --tile-hover: #DDE9F8;    /* hover lift target — brighter than canvas */
 
-  /* legacy aliases — old code still references these */
-  --panel: #F5F5F7;
-  --panel-alt: #FBFBFD;
-  --panel-muted: #F5F5F7;
-  --panel-sunken: #EEEEF1;
-  --bg-paper: #FBFBFD;
+  /* legacy aliases — pointed at current slate tokens so old code matches */
+  --panel: var(--tile);
+  --panel-alt: var(--bg-alt);
+  --panel-muted: var(--tile-deep);
+  --panel-sunken: var(--tile-deep);
+  --bg-paper: var(--bg-alt);
   --bg-white: #FFFFFF;
 
-  /* === Type === */
-  --ink: #1D1D1F;           /* Apple ink */
+  /* === Type (darker for readability on slate tiles) === */
+  --ink: #0F172A;           /* slate-900 — primary text */
   --ink-strong: #000000;
-  --ink-muted: #6E6E73;
-  --ink-faint: #86868B;
+  --ink-muted: #334155;     /* slate-700 — readable on slate tiles */
+  --ink-faint: #475569;     /* slate-600 — captions/metadata */
 
-  --text: #1D1D1F;          /* legacy alias */
+  --text: #0F172A;          /* legacy alias */
   --text-strong: #000000;
-  --text-muted: #6E6E73;
+  --text-muted: #334155;
 
   /* === Borders → effectively none. Kept transparent for legacy classes. === */
   --border: transparent;
@@ -65,11 +65,11 @@
   --radius-tile: 22px;
   --radius-input: 12px;
 
-  /* === Font stacks === */
-  --font-sans: var(--font-inter), "Inter", -apple-system, "SF Pro Text",
-               "BlinkMacSystemFont", "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-mono-jetbrains), "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
-  --font-display: var(--font-inter), "SF Pro Display", "Inter Display", "Inter", system-ui, sans-serif;
+  /* === Font stacks (Roboto) === */
+  --font-sans: var(--font-roboto-sans), "Roboto", -apple-system, "Segoe UI",
+               system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), "Roboto Mono", "SFMono-Regular", "Menlo", monospace;
+  --font-display: var(--font-roboto-sans), "Roboto", system-ui, sans-serif;
 
   /* === Motion === */
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
@@ -144,7 +144,7 @@ input, textarea, select {
 
 .eyebrow {
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -153,7 +153,7 @@ input, textarea, select {
 
 .eyebrow-mono {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -162,7 +162,7 @@ input, textarea, select {
 
 .coordinate {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--ink-muted);
@@ -174,6 +174,15 @@ input, textarea, select {
   letter-spacing: -0.025em;
   color: var(--ink-strong);
   line-height: 1.05;
+}
+
+.card-title {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink-strong);
+  line-height: 1.25;
 }
 
 /* === Tile primitive — borderless, rounded, soft hover lift === */
@@ -212,8 +221,8 @@ input, textarea, select {
 .atlas-prose {
   color: var(--ink);
   max-width: 68ch;
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  font-size: 1.1875rem;   /* ~19px body prose */
+  line-height: 1.65;
 }
 
 .atlas-prose h1,

@@ -10,10 +10,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
       <footer className="mt-8">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center gap-1 px-4 py-10 text-center md:px-8">
-          <p className="text-[13px] text-[var(--ink-muted)]">
+          <p className="text-[15px] text-[var(--ink-muted)]">
             ATLAS Learning — Robotics curriculum
           </p>
-          <p className="text-[12px] text-[var(--ink-faint)]">v0.1 · Proficiency engine</p>
+          <p className="text-[14px] text-[var(--ink-faint)]">v0.1 · Proficiency engine</p>
         </div>
       </footer>
     </div>

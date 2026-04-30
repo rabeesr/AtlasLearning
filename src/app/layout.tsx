@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Roboto, Roboto_Mono } from "next/font/google";
 
 import { AppShell } from "@/components/shared/app-shell";
 
 import "./globals.css";
 
-const inter = Inter({
+const robotoSans = Roboto({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-roboto-sans",
+  weight: ["300", "400", "500", "600", "700", "900"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
-  variable: "--font-mono-jetbrains",
+  variable: "--font-roboto-mono",
   display: "swap",
 });
 
@@ -39,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${robotoSans.variable} ${robotoMono.variable}`}>
       <body>
         <AppShell>{children}</AppShell>
       </body>

@@ -22,7 +22,7 @@ export function Toolbar() {
 
   function navLinkClass(active: boolean) {
     return [
-      "inline-flex items-center rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all duration-200 ease-out",
+      "inline-flex items-center rounded-full px-4 py-2 text-[15px] font-medium transition-all duration-200 ease-out",
       active
         ? "bg-[var(--tile)] text-[var(--ink-strong)] font-semibold"
         : "text-[var(--ink-muted)] hover:bg-[var(--tile)] hover:text-[var(--ink)]",
