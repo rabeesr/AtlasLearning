@@ -1,71 +1,81 @@
 @import "tailwindcss";
 
 :root {
-  /* === Surfaces (warm cream, Palantir-derived) === */
-  --bg: #F4F2EE;            /* warm cream canvas (default) */
-  --bg-paper: #ECE8E0;      /* deeper paper for alternating section bands */
-  --bg-white: #FBFAF7;      /* off-white for raised reading surfaces */
-  --panel: #FBFAF7;         /* legacy alias → off-white card */
-  --panel-alt: #F4F2EE;     /* legacy alias → cream */
-  --panel-muted: #E8E4DB;   /* sunken inset (code, quiz callouts) */
-  --panel-sunken: #E8E4DB;
+  /* === Surfaces (Apple white + light gray) === */
+  --bg: #FFFFFF;            /* pure white canvas */
+  --bg-alt: #FBFBFD;        /* very subtle deeper white for section bands */
+  --tile: #F5F5F7;           /* Apple's tile gray */
+  --tile-deep: #EEEEF1;     /* slightly deeper tile (hover lift target) */
 
-  /* === Lines (hairlines are ink, not gray) === */
-  --ink: #1E2124;
-  --ink-strong: #0A0B0D;
-  --ink-muted: #5C6068;
-  --ink-faint: #9A9EA4;
-  --rule: #1E2124;
-  --rule-soft: #C9C3B6;
-  --border: #1E2124;        /* legacy alias → ink hairline */
-  --border-strong: #0A0B0D; /* legacy alias */
+  /* legacy aliases — old code still references these */
+  --panel: #F5F5F7;
+  --panel-alt: #FBFBFD;
+  --panel-muted: #F5F5F7;
+  --panel-sunken: #EEEEF1;
+  --bg-paper: #FBFBFD;
+  --bg-white: #FFFFFF;
 
   /* === Type === */
-  --text: #1E2124;          /* legacy alias → ink */
-  --text-strong: #0A0B0D;
-  --text-muted: #5C6068;
+  --ink: #1D1D1F;           /* Apple ink */
+  --ink-strong: #000000;
+  --ink-muted: #6E6E73;
+  --ink-faint: #86868B;
 
-  /* === Accent (single restrained terracotta) === */
-  --accent: #C8442A;
-  --accent-strong: #7A2614;
-  --accent-soft: #F1E2DC;   /* terracotta wash for active/selected states */
-  --accent-olive: #5C6B3A;  /* secondary accent — taxonomy only */
+  --text: #1D1D1F;          /* legacy alias */
+  --text-strong: #000000;
+  --text-muted: #6E6E73;
 
-  /* === CTA legacy aliases (point to ink, not amber) === */
-  --cta: #1E2124;
-  --cta-strong: #0A0B0D;
-  --cta-soft: #E8E4DB;
+  /* === Borders → effectively none. Kept transparent for legacy classes. === */
+  --border: transparent;
+  --border-strong: transparent;
+  --rule: transparent;
+  --rule-soft: rgba(0, 0, 0, 0.06);   /* only for separators when truly needed */
 
-  /* === Status (muted, document-grade) === */
-  --success: #3F6B3A;
-  --warning: #B36A1F;
-  --danger: #B22D1F;
+  /* === Accent (Apple link blue) === */
+  --accent: #0066CC;
+  --accent-strong: #004C99;
+  --accent-soft: #E6F0FA;
 
-  /* === Shadow → none. Depth comes from hairlines and bands. === */
+  /* === CTA legacy aliases === */
+  --cta: #1D1D1F;
+  --cta-strong: #000000;
+  --cta-soft: #F5F5F7;
+
+  /* === Status (muted) === */
+  --success: #248A3D;
+  --warning: #B25000;
+  --danger: #C8102E;
+
+  /* === Soft elevation (hover-only by default) === */
   --shadow-card: 0 0 0 0 transparent;
-  --shadow-hover: 0 0 0 0 transparent;
+  --shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+  --shadow-deep:  0 20px 56px rgba(0, 0, 0, 0.10), 0 6px 16px rgba(0, 0, 0, 0.05);
 
-  /* === Override Tailwind v4 radius tokens (form language: square) === */
-  --radius-xs: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-full: 0px;
+  /* === Radius — generous, Apple-style === */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+  --radius-3xl: 32px;
+  --radius-full: 9999px;
 
-  /* Inputs only */
-  --radius-input: 2px;
+  --radius-tile: 22px;
+  --radius-input: 12px;
 
   /* === Font stacks === */
-  --font-sans: var(--font-inter), "Inter", "Inter Tight", "Söhne",
-               "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-mono-jetbrains), "JetBrains Mono", "Berkeley Mono",
-               "SFMono-Regular", "Menlo", monospace;
-  --font-display: var(--font-inter), "Inter Display", "Inter", "Söhne", system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", -apple-system, "SF Pro Text",
+               "BlinkMacSystemFont", "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-mono-jetbrains), "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+  --font-display: var(--font-inter), "SF Pro Display", "Inter Display", "Inter", system-ui, sans-serif;
 
-  --focus-ring: 2px solid var(--ink);
+  /* === Motion === */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 180ms;
+  --duration: 280ms;
+  --duration-slow: 480ms;
 }
 
 * {
@@ -80,20 +90,14 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background-color: var(--bg);
-  /* Hairline graph-paper grid — engineering-document presence */
-  background-image:
-    linear-gradient(to right,  rgba(28, 33, 36, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(28, 33, 36, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-attachment: fixed;
-  background-position: 0 0;
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  letter-spacing: -0.011em;
 }
 
 a {
@@ -107,8 +111,9 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
+  border-radius: 6px;
 }
 
 pre {
@@ -120,8 +125,8 @@ input, textarea, select {
 }
 
 ::selection {
-  background: var(--ink);
-  color: var(--bg-white);
+  background: rgba(0, 102, 204, 0.18);
+  color: var(--ink-strong);
 }
 
 .tabular-nums {
@@ -130,18 +135,18 @@ input, textarea, select {
 
 .atlas-background {
   min-height: 100vh;
-  background: transparent;
+  background: var(--bg);
   position: relative;
 }
 
-/* === Editorial primitives === */
+/* === Editorial primitives (mostly typography) === */
 
 .eyebrow {
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.08em;
   color: var(--ink-muted);
 }
 
@@ -150,34 +155,62 @@ input, textarea, select {
   font-size: 11px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--ink-muted);
 }
 
 .coordinate {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: var(--ink-muted);
 }
 
 .display-headline {
   font-family: var(--font-display);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--ink-strong);
   line-height: 1.05;
 }
 
-/* === Editorial prose (extends existing class) === */
+/* === Tile primitive — borderless, rounded, soft hover lift === */
+
+.tile {
+  background: var(--tile);
+  border-radius: var(--radius-tile);
+  transition:
+    transform var(--duration) var(--ease-out),
+    box-shadow var(--duration) var(--ease-out),
+    background-color var(--duration) var(--ease-out);
+  will-change: transform;
+}
+
+.tile-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  background: var(--bg);
+}
+
+.tile-link {
+  display: block;
+  cursor: pointer;
+}
+
+.tile-link:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  background: var(--bg);
+}
+
+/* === Editorial prose === */
 
 .atlas-prose {
   color: var(--ink);
   max-width: 68ch;
-  font-size: 1rem;
-  line-height: 1.65;
+  font-size: 1.0625rem;
+  line-height: 1.6;
 }
 
 .atlas-prose h1,
@@ -186,17 +219,17 @@ input, textarea, select {
 .atlas-prose h4 {
   color: var(--ink-strong);
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
-.atlas-prose h1 { font-size: 2.25rem; line-height: 1.1; margin-top: 0; margin-bottom: 1.25rem; }
-.atlas-prose h2 { font-size: 1.5rem; line-height: 1.2; margin-top: 2.5rem; margin-bottom: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
-.atlas-prose h3 { font-size: 1.15rem; line-height: 1.3; margin-top: 1.75rem; margin-bottom: 0.5rem; }
+.atlas-prose h1 { font-size: 2.5rem; line-height: 1.08; margin-top: 0; margin-bottom: 1.25rem; }
+.atlas-prose h2 { font-size: 1.625rem; line-height: 1.18; margin-top: 2.75rem; margin-bottom: 0.75rem; }
+.atlas-prose h3 { font-size: 1.2rem; line-height: 1.3; margin-top: 1.75rem; margin-bottom: 0.5rem; }
 
 .atlas-prose p,
 .atlas-prose li,
 .atlas-prose blockquote {
-  line-height: 1.7;
+  line-height: 1.65;
   color: var(--ink);
 }
 
@@ -205,28 +238,29 @@ input, textarea, select {
 }
 
 .atlas-prose blockquote {
-  border-left: 2px solid var(--ink);
-  padding-left: 1rem;
+  background: var(--tile);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
   margin-left: 0;
-  font-style: italic;
   color: var(--ink-muted);
 }
 
 .atlas-prose code {
-  background: var(--panel-sunken);
+  background: var(--tile);
   border: none;
-  border-radius: 0;
+  border-radius: 6px;
   font-family: var(--font-mono);
-  padding: 0.1rem 0.35rem;
+  padding: 0.12rem 0.4rem;
   font-size: 0.88em;
   color: var(--ink-strong);
 }
 
 .atlas-prose pre {
-  background: var(--ink-strong);
-  padding: 1rem 1.1rem;
+  background: #1D1D1F;
+  border-radius: var(--radius-md);
+  padding: 1.05rem 1.15rem;
   margin: 1.25rem 0;
-  border: 1px solid var(--ink);
+  border: none;
 }
 
 .atlas-prose pre code {
@@ -234,7 +268,7 @@ input, textarea, select {
   display: block;
   padding: 0;
   background: transparent;
-  color: #ECE8E0;
+  color: #F5F5F7;
   font-size: 0.85em;
   border-radius: 0;
 }
@@ -242,58 +276,16 @@ input, textarea, select {
 .atlas-prose strong { color: var(--ink-strong); font-weight: 600; }
 .atlas-prose a {
   color: var(--accent);
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 1px;
+  border-bottom: none;
+  transition: color var(--duration-fast) var(--ease);
 }
-.atlas-prose a:hover { color: var(--accent-strong); border-bottom-color: var(--accent-strong); }
+.atlas-prose a:hover { color: var(--accent-strong); }
 
 .atlas-prose hr {
   border: none;
-  border-top: 1px solid var(--rule);
-  margin: 2rem 0;
+  border-top: 1px solid var(--rule-soft);
+  margin: 2.25rem 0;
 }
-
-/* === Section banding (full-bleed) === */
-
-.section-band {
-  position: relative;
-}
-
-.section-band--paper {
-  background: var(--bg-paper);
-}
-
-.section-band--cream {
-  background: var(--bg);
-}
-
-.section-band + .section-band {
-  border-top: 1px solid var(--rule);
-}
-
-/* === Corner registration marks (Palantir-style L-ticks) === */
-
-.corner-marks {
-  position: relative;
-}
-
-.corner-marks::before,
-.corner-marks::after,
-.corner-marks > .corner-marks__br,
-.corner-marks > .corner-marks__bl {
-  content: "";
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-color: var(--ink);
-  border-style: solid;
-  border-width: 0;
-  pointer-events: none;
-}
-.corner-marks::before { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
-.corner-marks::after  { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
-.corner-marks > .corner-marks__bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
-.corner-marks > .corner-marks__br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
 
 /* === Reduced motion === */
 
@@ -303,5 +295,8 @@ input, textarea, select {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .tile-hover:hover, .tile-link:hover {
+    transform: none;
   }
 }
