@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-10">
       <SectionHeader
-        eyebrow={`Welcome back, ${user.displayName}`}
+        eyebrow={`WELCOME BACK / ${user.displayName.toUpperCase()}`}
         title="Robotics proficiency at a glance"
         description="Track strength across phases, see where decay is starting, and drill down into topic-level detail."
       />
@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       </div>
 
       <section>
-        <SectionHeader title="Phase progression" />
+        <SectionHeader index={1} eyebrow="Phase Progression" title="Curriculum phases" />
         <div className="grid gap-4 lg:grid-cols-3">
           {dashboard.phaseProgress.map((progress) => (
             <PhaseProgressCard key={progress.phase.slug} progress={progress} />
@@ -57,7 +57,9 @@ export default async function DashboardPage() {
       {dashboard.decaying.length > 0 ? (
         <section>
           <SectionHeader
-            title="Decay alerts"
+            index={2}
+            eyebrow="Decay Alerts"
+            title="Retention is slipping"
             description="Topics where retention is slipping. Schedule a review to lock them back in."
           />
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -97,7 +99,9 @@ export default async function DashboardPage() {
 
       <section>
         <SectionHeader
-          title="All topics"
+          index={3}
+          eyebrow="All Topics"
+          title="Top-level proficiency map"
           description="Top-level topics with subtopic proficiency at a glance. Click in for the full hub."
         />
         <TopicProficiencyGrid summaries={topLevelSummaries} topicsBySlug={topicsBySlug} />
@@ -105,7 +109,9 @@ export default async function DashboardPage() {
 
       <section>
         <SectionHeader
-          title="Status legend"
+          index={4}
+          eyebrow="Status Legend"
+          title="How status is derived"
           description="How a topic's status is derived from proficiency and prerequisites."
         />
         <div className="flex flex-wrap gap-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -19,38 +20,48 @@ export function Toolbar() {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  function navLinkClass(active: boolean) {
+    return [
+      "h-full px-3 inline-flex items-center font-mono uppercase tracking-[0.12em] text-[11px] border-b-2 transition-colors duration-100",
+      active
+        ? "text-[var(--ink-strong)] border-[var(--accent)]"
+        : "text-[var(--ink-muted)] border-transparent hover:text-[var(--ink)] hover:border-[var(--rule-soft)]",
+    ].join(" ");
+  }
+
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[rgba(7,17,31,0.85)] backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-6 px-4 md:px-8">
-        <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold tracking-[0.28em] text-[var(--accent)]">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[var(--accent-soft)] text-[var(--accent)]">A</span>
-          ATLAS
+    <header className="sticky top-0 z-30 border-b border-[var(--ink)] bg-[var(--bg-white)]/85 backdrop-blur">
+      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-stretch gap-0 px-4 md:px-8">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 pr-5 mr-2 border-r border-[var(--ink)]"
+          aria-label="ATLAS Learning home"
+        >
+          <span className="block h-9 w-[60px] border border-[var(--ink)] bg-[var(--bg-white)] overflow-hidden relative">
+            <Image
+              src="/atlas-logo.png"
+              alt="ATLAS Learning"
+              fill
+              sizes="60px"
+              priority
+              className="object-cover"
+            />
+          </span>
         </Link>
-        <nav className="flex flex-1 items-center gap-1">
-          {primaryLinks.map((link) => {
-            const active = isActive(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`rounded-md px-3 py-1.5 text-sm transition ${
-                  active
-                    ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-                    : "text-[var(--text-muted)] hover:bg-[var(--panel-muted)] hover:text-[var(--text)]"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <nav className="flex flex-1 items-stretch gap-0">
+          {primaryLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={navLinkClass(isActive(link.href))}
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
         <Link
           href="/settings"
-          className={`rounded-md px-3 py-1.5 text-sm transition ${
-            isActive("/settings")
-              ? "bg-[var(--accent-soft)] text-[var(--accent)]"
-              : "text-[var(--text-muted)] hover:bg-[var(--panel-muted)] hover:text-[var(--text)]"
-          }`}
+          className={navLinkClass(isActive("/settings"))}
         >
           Settings
         </Link>

@@ -1,40 +1,71 @@
 @import "tailwindcss";
 
 :root {
-  /* Surfaces */
-  --bg: #F8FAFC;
-  --bg-alt: #F1F5F9;
-  --panel: #FFFFFF;
-  --panel-alt: #F8FAFC;
-  --panel-muted: #F1F5F9;
+  /* === Surfaces (warm cream, Palantir-derived) === */
+  --bg: #F4F2EE;            /* warm cream canvas (default) */
+  --bg-paper: #ECE8E0;      /* deeper paper for alternating section bands */
+  --bg-white: #FBFAF7;      /* off-white for raised reading surfaces */
+  --panel: #FBFAF7;         /* legacy alias → off-white card */
+  --panel-alt: #F4F2EE;     /* legacy alias → cream */
+  --panel-muted: #E8E4DB;   /* sunken inset (code, quiz callouts) */
+  --panel-sunken: #E8E4DB;
 
-  /* Lines */
-  --border: #E2E8F0;
-  --border-strong: #CBD5E1;
+  /* === Lines (hairlines are ink, not gray) === */
+  --ink: #1E2124;
+  --ink-strong: #0A0B0D;
+  --ink-muted: #5C6068;
+  --ink-faint: #9A9EA4;
+  --rule: #1E2124;
+  --rule-soft: #C9C3B6;
+  --border: #1E2124;        /* legacy alias → ink hairline */
+  --border-strong: #0A0B0D; /* legacy alias */
 
-  /* Type */
-  --text: #1E293B;        /* slate-800 */
-  --text-strong: #0F172A; /* slate-900 */
-  --text-muted: #64748B;  /* slate-500 */
+  /* === Type === */
+  --text: #1E2124;          /* legacy alias → ink */
+  --text-strong: #0A0B0D;
+  --text-muted: #5C6068;
 
-  /* Brand */
-  --accent: #1E40AF;        /* indigo-800 — primary */
-  --accent-strong: #1E3A8A;
-  --accent-soft: #EEF2FF;   /* indigo-50 */
+  /* === Accent (single restrained terracotta) === */
+  --accent: #C8442A;
+  --accent-strong: #7A2614;
+  --accent-soft: #F1E2DC;   /* terracotta wash for active/selected states */
+  --accent-olive: #5C6B3A;  /* secondary accent — taxonomy only */
 
-  /* CTA / highlight */
-  --cta: #D97706;           /* amber-600 */
-  --cta-strong: #B45309;
-  --cta-soft: #FEF3C7;      /* amber-100 */
+  /* === CTA legacy aliases (point to ink, not amber) === */
+  --cta: #1E2124;
+  --cta-strong: #0A0B0D;
+  --cta-soft: #E8E4DB;
 
-  /* Status */
-  --success: #16A34A;
-  --warning: #D97706;
-  --danger: #DC2626;
+  /* === Status (muted, document-grade) === */
+  --success: #3F6B3A;
+  --warning: #B36A1F;
+  --danger: #B22D1F;
 
-  /* Shadow */
-  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-hover: 0 4px 14px rgba(15, 23, 42, 0.08);
+  /* === Shadow → none. Depth comes from hairlines and bands. === */
+  --shadow-card: 0 0 0 0 transparent;
+  --shadow-hover: 0 0 0 0 transparent;
+
+  /* === Override Tailwind v4 radius tokens (form language: square) === */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-full: 0px;
+
+  /* Inputs only */
+  --radius-input: 2px;
+
+  /* === Font stacks === */
+  --font-sans: var(--font-inter), "Inter", "Inter Tight", "Söhne",
+               "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-mono-jetbrains), "JetBrains Mono", "Berkeley Mono",
+               "SFMono-Regular", "Menlo", monospace;
+  --font-display: var(--font-inter), "Inter Display", "Inter", "Söhne", system-ui, sans-serif;
+
+  --focus-ring: 2px solid var(--ink);
 }
 
 * {
@@ -49,11 +80,20 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--bg);
-  color: var(--text);
-  font-family: "Inter", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  background-color: var(--bg);
+  /* Hairline graph-paper grid — engineering-document presence */
+  background-image:
+    linear-gradient(to right,  rgba(28, 33, 36, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(28, 33, 36, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-attachment: fixed;
+  background-position: 0 0;
+  color: var(--ink);
+  font-family: var(--font-sans);
   font-feature-settings: "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -61,8 +101,27 @@ a {
   text-decoration: none;
 }
 
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
 pre {
   overflow-x: auto;
+}
+
+input, textarea, select {
+  border-radius: var(--radius-input);
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--bg-white);
 }
 
 .tabular-nums {
@@ -71,57 +130,178 @@ pre {
 
 .atlas-background {
   min-height: 100vh;
-  background: var(--bg);
+  background: transparent;
   position: relative;
 }
 
+/* === Editorial primitives === */
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.eyebrow-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.coordinate {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.display-headline {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink-strong);
+  line-height: 1.05;
+}
+
+/* === Editorial prose (extends existing class) === */
+
 .atlas-prose {
-  color: var(--text);
+  color: var(--ink);
+  max-width: 68ch;
+  font-size: 1rem;
+  line-height: 1.65;
 }
 
 .atlas-prose h1,
 .atlas-prose h2,
 .atlas-prose h3,
 .atlas-prose h4 {
-  color: var(--text-strong);
+  color: var(--ink-strong);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
-.atlas-prose h1 { font-size: 1.6rem; margin-top: 0; margin-bottom: 1rem; }
-.atlas-prose h2 { font-size: 1.25rem; margin-top: 1.75rem; margin-bottom: 0.75rem; }
-.atlas-prose h3 { font-size: 1.05rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.atlas-prose h1 { font-size: 2.25rem; line-height: 1.1; margin-top: 0; margin-bottom: 1.25rem; }
+.atlas-prose h2 { font-size: 1.5rem; line-height: 1.2; margin-top: 2.5rem; margin-bottom: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); }
+.atlas-prose h3 { font-size: 1.15rem; line-height: 1.3; margin-top: 1.75rem; margin-bottom: 0.5rem; }
 
 .atlas-prose p,
 .atlas-prose li,
 .atlas-prose blockquote {
-  line-height: 1.75;
-  color: var(--text);
+  line-height: 1.7;
+  color: var(--ink);
 }
 
 .atlas-prose ul, .atlas-prose ol {
   padding-left: 1.25rem;
 }
 
+.atlas-prose blockquote {
+  border-left: 2px solid var(--ink);
+  padding-left: 1rem;
+  margin-left: 0;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
 .atlas-prose code {
-  background: var(--panel-muted);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: "SFMono-Regular", "Menlo", monospace;
-  padding: 0.08rem 0.35rem;
+  background: var(--panel-sunken);
+  border: none;
+  border-radius: 0;
+  font-family: var(--font-mono);
+  padding: 0.1rem 0.35rem;
   font-size: 0.88em;
-  color: var(--accent);
+  color: var(--ink-strong);
+}
+
+.atlas-prose pre {
+  background: var(--ink-strong);
+  padding: 1rem 1.1rem;
+  margin: 1.25rem 0;
+  border: 1px solid var(--ink);
 }
 
 .atlas-prose pre code {
-  border-radius: 8px;
-  display: block;
-  padding: 0.85rem 1rem;
-  background: #0F172A;
-  color: #E2E8F0;
   border: none;
+  display: block;
+  padding: 0;
+  background: transparent;
+  color: #ECE8E0;
   font-size: 0.85em;
+  border-radius: 0;
 }
 
-.atlas-prose strong { color: var(--text-strong); font-weight: 600; }
-.atlas-prose a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.atlas-prose strong { color: var(--ink-strong); font-weight: 600; }
+.atlas-prose a {
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 1px;
+}
+.atlas-prose a:hover { color: var(--accent-strong); border-bottom-color: var(--accent-strong); }
+
+.atlas-prose hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 2rem 0;
+}
+
+/* === Section banding (full-bleed) === */
+
+.section-band {
+  position: relative;
+}
+
+.section-band--paper {
+  background: var(--bg-paper);
+}
+
+.section-band--cream {
+  background: var(--bg);
+}
+
+.section-band + .section-band {
+  border-top: 1px solid var(--rule);
+}
+
+/* === Corner registration marks (Palantir-style L-ticks) === */
+
+.corner-marks {
+  position: relative;
+}
+
+.corner-marks::before,
+.corner-marks::after,
+.corner-marks > .corner-marks__br,
+.corner-marks > .corner-marks__bl {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--ink);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+.corner-marks::before { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+.corner-marks::after  { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+.corner-marks > .corner-marks__bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+.corner-marks > .corner-marks__br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+
+/* === Reduced motion === */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
