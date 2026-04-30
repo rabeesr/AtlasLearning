@@ -1,11 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  /* === Surfaces (slate-blue canvas, white tiles for contrast) === */
+  /* === Surfaces (slate-blue canvas, deeper slate tiles for inset depth) === */
   --bg: #D9E2EF;            /* slate-blue canvas */
   --bg-alt: #E3EAF4;        /* slightly lighter section band */
-  --tile: #FFFFFF;          /* white tile — clean contrast against slate bg */
-  --tile-deep: #F1F4F9;     /* deeper tile / progress track */
+  --tile: #C7D1E0;          /* deeper slate tile — sits inset against canvas */
+  --tile-deep: #B8C4D6;     /* deepest slate / progress track */
+  --tile-hover: #E8EEF7;    /* hover lift target — brighter than canvas */
 
   /* legacy aliases — old code still references these */
   --panel: #F5F5F7;
@@ -192,12 +193,13 @@ input, textarea, select {
 .tile-hover:hover,
 .tile-link:hover {
   transform: translateY(-4px);
+  background: var(--tile-hover);
   /* Prominent slate-blue ring + deep drop shadow */
   box-shadow:
-    0 0 0 1.5px rgba(51, 65, 85, 0.28),
-    0 28px 56px rgba(15, 23, 42, 0.22),
-    0 12px 24px rgba(15, 23, 42, 0.14),
-    0 4px 8px rgba(15, 23, 42, 0.08);
+    0 0 0 1.5px rgba(51, 65, 85, 0.30),
+    0 28px 56px rgba(15, 23, 42, 0.24),
+    0 12px 24px rgba(15, 23, 42, 0.16),
+    0 4px 8px rgba(15, 23, 42, 0.10);
 }
 
 .tile-link {

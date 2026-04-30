@@ -31,23 +31,23 @@ export function Toolbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-[var(--bg)]/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 w-full max-w-[1400px] items-center gap-4 px-4 md:px-8">
+      <div className="mx-auto flex h-32 w-full max-w-[1400px] items-center gap-5 px-4 md:px-8">
         <Link
           href="/dashboard"
           className="group flex items-center gap-2.5 transition-opacity duration-200 hover:opacity-80"
           aria-label="ATLAS Learning home"
         >
-          <span className="relative block h-14 w-14 overflow-hidden rounded-[14px]">
+          <span className="relative block h-28 w-28 overflow-hidden rounded-[20px]">
             <Image
               src="/atlas-logo.png"
               alt=""
               fill
-              sizes="56px"
+              sizes="112px"
               priority
               className="object-cover"
             />
           </span>
-          <span className="text-[17px] font-semibold tracking-tight text-[var(--ink-strong)]">
+          <span className="text-[20px] font-semibold tracking-tight text-[var(--ink-strong)]">
             ATLAS
           </span>
         </Link>
