@@ -1,72 +1,363 @@
 domain:
   slug: robotics
   name: Robotics
-  description: "Seed robotics curriculum for the first ATLAS scaffold"
+  description: "A deep-trunk robotics curriculum covering computational math, systems programming, hardware control, and autonomy."
+
+phases:
+  - slug: phase-1-foundations
+    name: "Phase 1 — Foundations"
+    description: "Computational math and low-level systems programming. Run branches in parallel."
+    order: 1
+  - slug: phase-2-hardware-motion
+    name: "Phase 2 — Hardware & Motion"
+    description: "Bridge software and physical motors. Build kinematic understanding and learn ROS 2."
+    order: 2
+  - slug: phase-3-autonomy
+    name: "Phase 3 — Advanced Autonomy"
+    description: "Reason under uncertainty: probabilistic state estimation, SLAM, and computer vision."
+    order: 3
 
 topics:
-  - slug: mathematics-foundations
-    name: "Mathematics Foundations"
-    description: "The mathematical language and tools used throughout robotics."
+  # ---------- PHASE 1, BRANCH 1A: Computational Math ----------
+  - slug: linear-algebra-robotics
+    phase: phase-1-foundations
+    branch: "1A — Computational Math"
+    name: "Computational Linear Algebra"
+    description: "Linear algebra learned computationally as a way to handle data — not through abstract determinants."
     difficulty: beginner
-    estimated_minutes: 240
+    estimated_minutes: 480
+    surfaces: [learn, quizzes, challenges, projects]
     subtopics:
-      - slug: linear-algebra-robotics
-        name: "Linear Algebra for Robotics"
-        description: "Vectors, frames, matrices, and transformations."
+      - slug: matrix-vector-operations
+        name: "Matrix & Vector Operations"
+        description: "Core linear algebra operations implemented from scratch."
+        difficulty: beginner
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges]
+      - slug: linear-systems
+        name: "Systems of Linear Equations"
+        description: "Gaussian elimination, LU decomposition, numerical stability."
         difficulty: beginner
         estimated_minutes: 90
-      - slug: calculus-robotics
-        name: "Calculus for Robotics"
-        description: "Rates of change, accumulation, and differential equations for motion."
-        difficulty: beginner
+        surfaces: [learn, quizzes, challenges]
+      - slug: eigenvalues-eigenvectors
+        name: "Eigenvalues & Eigenvectors"
+        description: "Spectral decomposition and its uses in robotics."
+        difficulty: intermediate
         estimated_minutes: 90
-      - slug: probability-statistics
-        name: "Probability and Statistics"
-        description: "Core uncertainty tools that later support sensing and estimation."
+        surfaces: [learn, quizzes]
+      - slug: least-squares
+        name: "Least Squares Optimization"
+        description: "Bedrock for sensor calibration and state estimation."
         difficulty: intermediate
         estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges, projects]
 
-  - slug: control-theory
-    name: "Control Theory"
-    description: "How robots regulate motion and stabilize behavior through feedback."
-    difficulty: intermediate
-    dependencies:
-      - mathematics-foundations
-    estimated_minutes: 180
+  - slug: calculus-robotics
+    phase: phase-1-foundations
+    branch: "1A — Computational Math"
+    name: "Calculus for the Modern Engineer"
+    description: "Calculus modeled for physical kinematics, dynamic systems, and ODEs."
+    difficulty: beginner
+    estimated_minutes: 420
+    surfaces: [learn, quizzes, projects]
     subtopics:
-      - slug: feedback-loops
-        name: "Feedback Loops"
-        description: "Closed-loop reasoning and the anatomy of a controller."
+      - slug: limits-integration
+        name: "Limits, Derivatives & Integration"
+        description: "Definite integration, improper integrals, accumulation."
+        difficulty: beginner
+        estimated_minutes: 90
+        surfaces: [learn, quizzes]
+      - slug: continuous-optimization
+        name: "Continuous Optimization"
+        description: "Gradient methods and constrained optimization basics."
+        difficulty: intermediate
+        estimated_minutes: 90
+        surfaces: [learn, quizzes]
+      - slug: ordinary-differential-equations
+        name: "Ordinary Differential Equations"
+        description: "Modeling dynamic physical systems with ODEs."
+        difficulty: intermediate
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, projects]
+      - slug: laplace-lagrangian
+        name: "Laplace Transforms & Lagrangian Mechanics"
+        description: "Frequency-domain analysis and energy-based dynamics."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+
+  # ---------- PHASE 1, BRANCH 1B: CS & AI Primitives ----------
+  - slug: intro-ai-programming
+    phase: phase-1-foundations
+    branch: "1B — CS & AI Primitives"
+    name: "Intro to AI & Programming"
+    description: "Discrete decision-making — graph algorithms, path planning, and C++ fundamentals."
+    difficulty: beginner
+    estimated_minutes: 360
+    surfaces: [learn, quizzes, challenges, projects]
+    subtopics:
+      - slug: cpp-fundamentals
+        name: "C++ Fundamentals"
+        description: "Types, control flow, classes, RAII, the standard library."
+        difficulty: beginner
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges]
+      - slug: discrete-graph-math
+        name: "Discrete Graph Mathematics"
+        description: "Graphs, trees, complexity, the building blocks of search."
         difficulty: beginner
         estimated_minutes: 60
+        surfaces: [learn, quizzes]
+      - slug: search-algorithms
+        name: "Search: BFS, DFS, Dijkstra, A*"
+        description: "How autonomous agents navigate a known static map."
+        difficulty: intermediate
+        estimated_minutes: 180
+        surfaces: [learn, quizzes, challenges, projects]
+
+  - slug: systems-programming-robotics
+    phase: phase-1-foundations
+    branch: "1B — CS & AI Primitives"
+    name: "Systems Programming for Robotics"
+    description: "Low-level, latency-free programming. Real-world robotics cannot rely on garbage-collected languages for safety-critical loops."
+    difficulty: intermediate
+    estimated_minutes: 480
+    surfaces: [learn, quizzes, challenges, projects]
+    subtopics:
+      - slug: linux-bash-git
+        name: "Linux, Bash, and Git"
+        description: "Operate confidently in a Unix shell and version-control workflows."
+        difficulty: beginner
+        estimated_minutes: 90
+        surfaces: [learn, quizzes, challenges]
+      - slug: c-pointers-memory
+        name: "C, Pointers, and Manual Memory"
+        description: "Pointer arithmetic, malloc/free, deep C semantics."
+        difficulty: intermediate
+        estimated_minutes: 150
+        surfaces: [learn, quizzes, challenges]
+      - slug: multithreading-concurrency
+        name: "Multithreading & Concurrency"
+        description: "Mutexes, deadlock prevention, race conditions in autonomous systems."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges]
+      - slug: debugging-tools
+        name: "GDB, Valgrind, AddressSanitizer"
+        description: "Detect memory leaks and resolve concurrency bugs."
+        difficulty: intermediate
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges]
+
+  # ---------- PHASE 2: Hardware & Motion ----------
+  - slug: building-moving-robots
+    phase: phase-2-hardware-motion
+    branch: "2A — Building & Moving Robots"
+    name: "Building & Moving Robots"
+    description: "Bridge software with physical motors via mechanical design and closed-loop control."
+    difficulty: intermediate
+    estimated_minutes: 540
+    dependencies: [linear-algebra-robotics, calculus-robotics, systems-programming-robotics]
+    surfaces: [learn, quizzes, challenges, projects]
+    subtopics:
+      - slug: motor-selection
+        name: "Motor Selection & Drive"
+        description: "DC, stepper, brushless motors, gear ratios, drivers, encoders."
+        difficulty: intermediate
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: manufacturing-cad
+        name: "Manufacturing & CAD"
+        description: "3D printing, laser cutting, SolidWorks/CAD modeling."
+        difficulty: beginner
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, projects]
+      - slug: digital-communications
+        name: "Digital Communications"
+        description: "I2C, SPI, UART, sensor protocols."
+        difficulty: intermediate
+        estimated_minutes: 90
+        surfaces: [learn, quizzes, challenges]
       - slug: pid-controllers
         name: "PID Controllers"
         description: "The canonical baseline controller for many robotics systems."
         difficulty: intermediate
-        dependencies:
-          - feedback-loops
-          - calculus-robotics
-        estimated_minutes: 90
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges, projects]
 
-  - slug: kinematics-dynamics
-    name: "Kinematics and Dynamics"
-    description: "Representing robot motion, geometry, and forces."
-    difficulty: intermediate
-    dependencies:
-      - mathematics-foundations
-    estimated_minutes: 220
+  - slug: rigid-body-kinematics
+    phase: phase-2-hardware-motion
+    branch: "2B — Manipulator Kinematics"
+    name: "Rigid Body Kinematics & Manipulators"
+    description: "Robotic arms: forward and inverse kinematics, Jacobians, manipulator dynamics."
+    difficulty: advanced
+    estimated_minutes: 480
+    dependencies: [linear-algebra-robotics, calculus-robotics]
+    surfaces: [learn, quizzes, challenges, projects]
     subtopics:
       - slug: forward-kinematics
         name: "Forward Kinematics"
-        description: "Mapping joint configurations to positions and poses."
+        description: "Mapping joint configurations to end-effector poses."
         difficulty: intermediate
-        dependencies:
-          - linear-algebra-robotics
-        estimated_minutes: 90
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges]
       - slug: inverse-kinematics
         name: "Inverse Kinematics"
         description: "Solving for configurations that achieve a desired pose."
         difficulty: advanced
-        dependencies:
-          - forward-kinematics
-        estimated_minutes: 110
+        estimated_minutes: 150
+        surfaces: [learn, quizzes, challenges]
+      - slug: jacobians-singularities
+        name: "Jacobians & Singularities"
+        description: "Joint velocities to spatial velocities; handling singular configurations."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: manipulator-dynamics
+        name: "Manipulator Dynamics"
+        description: "Newton-Euler equations and torque calculations."
+        difficulty: advanced
+        estimated_minutes: 90
+        surfaces: [learn, quizzes]
+
+  - slug: ros2
+    phase: phase-2-hardware-motion
+    branch: "2C — ROS 2"
+    name: "Robot Operating System (ROS 2)"
+    description: "Inter-process communication for robotics — pub/sub, nodes, services, simulation."
+    difficulty: intermediate
+    estimated_minutes: 420
+    dependencies: [systems-programming-robotics]
+    surfaces: [learn, quizzes, challenges, projects]
+    subtopics:
+      - slug: ros2-architecture
+        name: "ROS 2 Architecture"
+        description: "DDS, pub/sub, lifecycle nodes."
+        difficulty: intermediate
+        estimated_minutes: 90
+        surfaces: [learn, quizzes]
+      - slug: ros2-nodes-topics
+        name: "Nodes, Topics, Services, Actions"
+        description: "Build and connect ROS 2 components."
+        difficulty: intermediate
+        estimated_minutes: 150
+        surfaces: [learn, quizzes, challenges]
+      - slug: ros2-simulation
+        name: "rviz & Gazebo Simulation"
+        description: "Visualize and simulate robots before hardware."
+        difficulty: intermediate
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, projects]
+
+  # ---------- PHASE 3: Advanced Autonomy ----------
+  - slug: advanced-math-robotics
+    phase: phase-3-autonomy
+    branch: "3A — Graduate Math"
+    name: "Mathematics for Robotics — Graduate Level"
+    description: "Formal abstract math required to prove algorithms work under uncertainty."
+    difficulty: advanced
+    estimated_minutes: 480
+    dependencies: [linear-algebra-robotics, calculus-robotics]
+    surfaces: [learn, quizzes, projects]
+    subtopics:
+      - slug: abstract-linear-algebra
+        name: "Abstract Linear Algebra"
+        description: "Vector spaces, orthogonal bases, Gram-Schmidt."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: projection-theorem-blue
+        name: "Projection Theorem & BLUE"
+        description: "Best Linear Unbiased Estimators."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: real-analysis
+        name: "Real Analysis"
+        description: "Cauchy sequences, continuous functions, Weierstrass theorem."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: nonlinear-optimization
+        name: "Nonlinear Optimization"
+        description: "Newton-Raphson and continuous optimization."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, projects]
+
+  - slug: mobile-robotics-slam
+    phase: phase-3-autonomy
+    branch: "3B — SLAM"
+    name: "Mobile Robotics & SLAM"
+    description: "Where am I? What does the world look like? How do I get there? Probabilistic state estimation in unknown environments."
+    difficulty: advanced
+    estimated_minutes: 600
+    dependencies: [advanced-math-robotics, building-moving-robots]
+    surfaces: [learn, quizzes, challenges, projects]
+    subtopics:
+      - slug: bayesian-filtering
+        name: "Bayesian Filtering"
+        description: "Representing belief probabilistically."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: kalman-filters
+        name: "Kalman & Extended Kalman Filters"
+        description: "EKF, Invariant EKF for state estimation."
+        difficulty: advanced
+        estimated_minutes: 150
+        surfaces: [learn, quizzes, challenges]
+      - slug: lie-groups
+        name: "Lie Groups: SO(3), SE(3)"
+        description: "Mathematical structure of 3D rotation and translation."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes]
+      - slug: occupancy-mapping
+        name: "Occupancy Grid Mapping"
+        description: "Build maps from LIDAR scans."
+        difficulty: advanced
+        estimated_minutes: 90
+        surfaces: [learn, quizzes, challenges]
+      - slug: slam-implementation
+        name: "Full SLAM"
+        description: "Simultaneous localization and mapping end-to-end."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges, projects]
+
+  - slug: perception-computer-vision
+    phase: phase-3-autonomy
+    branch: "3C — Perception"
+    name: "Perception & Computer Vision"
+    description: "Cameras give semantic context. Classical vision and modern deep learning for robots."
+    difficulty: advanced
+    estimated_minutes: 540
+    dependencies: [linear-algebra-robotics, systems-programming-robotics]
+    surfaces: [learn, quizzes, challenges, projects]
+    subtopics:
+      - slug: camera-calibration
+        name: "Camera Calibration & Projective Geometry"
+        description: "Intrinsic/extrinsic calibration, pinhole models."
+        difficulty: intermediate
+        estimated_minutes: 90
+        surfaces: [learn, quizzes, challenges]
+      - slug: feature-extraction
+        name: "Feature Extraction (SIFT, ORB)"
+        description: "Classical keypoint detection and description."
+        difficulty: intermediate
+        estimated_minutes: 90
+        surfaces: [learn, quizzes, challenges]
+      - slug: object-detection-segmentation
+        name: "Object Detection & Segmentation"
+        description: "YOLO and semantic segmentation for drivable space."
+        difficulty: advanced
+        estimated_minutes: 150
+        surfaces: [learn, quizzes, challenges, projects]
+      - slug: visual-odometry
+        name: "Visual Odometry"
+        description: "Estimate robot motion from camera streams."
+        difficulty: advanced
+        estimated_minutes: 120
+        surfaces: [learn, quizzes, challenges]

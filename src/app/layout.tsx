@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 
+import { AppShell } from "@/components/shared/app-shell";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ATLAS Learning OS",
-  description: "A learner-facing operating system for deep technical study with a separate internal workbench.",
+  title: "ATLAS Learning",
+  description: "A focused robotics curriculum with proficiency tracking and spaced practice.",
 };
 
 export default function RootLayout({
@@ -14,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
