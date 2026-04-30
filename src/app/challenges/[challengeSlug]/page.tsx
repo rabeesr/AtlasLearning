@@ -111,7 +111,7 @@ export default async function ChallengeRunnerPage({
               support — the same renderer used by topic pages.
             </p>
             <p>
-              You'll be asked to implement{" "}
+              You&apos;ll be asked to implement{" "}
               <strong>{challenge.title.toLowerCase()}</strong>. Your solution
               must pass the test cases listed in the right pane.
             </p>

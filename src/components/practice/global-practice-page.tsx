@@ -68,9 +68,14 @@ export async function GlobalPracticePage({
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <PracticeFilters curriculum={curriculum} topicCounts={topicCounts} />
         <div className="space-y-3">
-          <p className="text-xs text-[var(--text-muted)]">
+          <p className="text-[14px] text-[var(--text-muted)]">
             {filtered.length} of {all.length} {kind === "challenge" ? "challenges" : `${kind}s`}
           </p>
+          {kind === "challenge" ? (
+            <p className="text-[13px] italic text-[var(--ink-faint)]">
+              Click any challenge to open the runner. Live in-browser Python execution lands in Week 1 (Pyodide).
+            </p>
+          ) : null}
           {filtered.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[var(--border)] p-10 text-center text-sm text-[var(--text-muted)]">
               No items match the current filters.
