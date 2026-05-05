@@ -1,0 +1,94 @@
+topic: linear-algebra-robotics
+cards:
+  - id: c1
+    front: "What is the span of a set of vectors?"
+    back: "The set of all vectors you can build by scaling and adding them — every direction you can reach by linear combination."
+    tags: [vectors-span]
+  - id: c2
+    front: "What does it mean for vectors to be linearly dependent, in robotics terms?"
+    back: "They lie in a lower-dimensional subspace than their count — a robot whose actuator vectors are linearly dependent loses controllable directions."
+    tags: [vectors-span]
+  - id: c3
+    front: "What is a matrix, intuitively?"
+    back: "A transformation that takes a vector and produces another vector."
+    tags: [matrix-vector-operations]
+  - id: c4
+    front: "Why is computing inv(A) explicitly a bad idea for solving Ax = b?"
+    back: "It's slower than LU + back-substitution and accumulates more rounding error. Use solve, not inv."
+    tags: [matrix-vector-operations, pitfalls]
+  - id: c5
+    front: "What is LU decomposition?"
+    back: "Factoring A = L·U into a lower-triangular L and upper-triangular U, so Ax = b becomes Ly = b (forward sub) followed by Ux = y (back sub)."
+    tags: [linear-systems]
+  - id: c6
+    front: "What does partial pivoting do?"
+    back: "Swaps rows during Gaussian elimination so the largest available value sits on the diagonal at each step, preventing rounding-error blowup from tiny pivots."
+    tags: [linear-systems]
+  - id: c7
+    front: "Define a rotation matrix R ∈ SO(n)."
+    back: "An orthonormal matrix with det = +1: RᵀR = I and Rᵀ = R⁻¹."
+    tags: [spatial-transforms]
+  - id: c8
+    front: "Write the 2D rotation matrix R(θ)."
+    back: "[[cos θ, −sin θ], [sin θ, cos θ]]."
+    tags: [spatial-transforms]
+  - id: c9
+    front: "Why is Rᵀ = R⁻¹ computationally valuable?"
+    back: "Un-rotating is free — a transpose is a memory-access pattern, no arithmetic, and numerically exact. No need to call inv on a rotation, ever."
+    tags: [spatial-transforms]
+  - id: c10
+    front: "What is a homogeneous transform T ∈ SE(3)?"
+    back: "A 4×4 matrix [[R, t], [0, 1]] that bundles a 3×3 rotation and a 3×1 translation so that 'rotate then translate' becomes one matrix multiplication on a 4-vector [x, y, z, 1]ᵀ."
+    tags: [spatial-transforms]
+  - id: c11
+    front: "What problem do least squares solve?"
+    back: "Find x that minimizes ‖Ax − b‖² when Ax = b has no exact solution (more equations than unknowns)."
+    tags: [least-squares]
+  - id: c12
+    front: "What are the normal equations?"
+    back: "AᵀAx = Aᵀb — the closed-form least-squares condition. Use QR or SVD in practice for stability."
+    tags: [least-squares]
+  - id: c13
+    front: "Why prefer QR or SVD over forming (AᵀA)⁻¹ for least squares?"
+    back: "Forming AᵀA squares the condition number of A. QR factorization solves the same problem without that amplification."
+    tags: [least-squares, pitfalls]
+  - id: c14
+    front: "What is recursive least squares (RLS)?"
+    back: "An online algorithm that updates a least-squares estimate as each new measurement arrives, using a running weighting matrix — the deterministic ancestor of the Kalman filter."
+    tags: [least-squares]
+  - id: c15
+    front: "Define eigenvector geometrically."
+    back: "A direction the matrix only scales (by the eigenvalue), never rotates."
+    tags: [eigenvalues]
+  - id: c16
+    front: "What does an eigenvalue of zero imply about a matrix?"
+    back: "The matrix collapses that direction to the origin — it is singular and not invertible."
+    tags: [eigenvalues]
+  - id: c17
+    front: "Stability condition for ẋ = Ax in terms of eigenvalues?"
+    back: "Stable iff every eigenvalue of A has strictly negative real part. Any eigenvalue with positive real part means an exponentially growing mode."
+    tags: [eigenvalues, stability]
+  - id: c18
+    front: "What does power iteration find?"
+    back: "The eigenvector corresponding to the largest-magnitude eigenvalue, by repeated multiplication."
+    tags: [eigenvalues]
+  - id: c19
+    front: "Write the SVD of a matrix A."
+    back: "A = U Σ Vᵀ, where U and V are orthonormal and Σ is diagonal with non-negative singular values (sorted descending)."
+    tags: [svd]
+  - id: c20
+    front: "Define the condition number in terms of singular values."
+    back: "σ_max / σ_min. Large means small input perturbations produce large output changes — the system is sensitive to noise."
+    tags: [svd, conditioning]
+  - id: c21
+    front: "What does σ_min ≈ 0 mean for a robot arm's Jacobian?"
+    back: "The arm is in (or near) a singular configuration — it has lost a degree of freedom in some direction, and inverse kinematics blows up."
+    tags: [svd, stability]
+  - id: c22
+    front: "In SVD-based point-cloud alignment, why subtract the centroid first?"
+    back: "Centering decouples translation from rotation: with zero-mean clouds the SVD recovers the optimal R from shape alone; translation is then t = c_y − R·c_x."
+    tags: [svd, lidar-scan-matcher]
+  - id: c23
+    front: "Why the determinant sign-fix in SVD-based rotation recovery?"
+    back: "Without it, the SVD can return a reflection (det = −1) that fits the residual equally well but isn't a physical rotation. The fix forces det R = +1, keeping the result in SO(3)."
+    tags: [svd, lidar-scan-matcher, pitfalls]

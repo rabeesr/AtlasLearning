@@ -3,11 +3,15 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { TopicTabs } from "@/components/topic/topic-tabs";
+import { LiveProficiencyHeader } from "@/components/topic/live-proficiency";
 import { Badge, Card, ProgressBar } from "@/components/shared/ui";
 import { STATUS_LABEL, STATUS_TONE } from "@/lib/learner/status";
 import { getCurriculumData } from "@/lib/content/curriculum";
+import { getQuizForTopic } from "@/lib/content/quiz-content";
+import { getTopicContent } from "@/lib/content/topic-content";
 import { getLearnerDashboardView } from "@/lib/learner/learner-data";
 import { listByTopic } from "@/lib/practice/practice-repository";
+import { isTrackedTopic } from "@/lib/progress/tracked-topics";
 import type { TopicSurface } from "@/types/domain";
 
 export default async function TopicLayout({
@@ -25,6 +29,11 @@ export default async function TopicLayout({
 
   const summary = dashboard.summaries.find((s) => s.topic.slug === topicSlug);
   if (!summary) notFound();
+
+  const tracked = isTrackedTopic(topicSlug);
+  const [topicContent, quiz] = tracked
+    ? await Promise.all([getTopicContent(topicSlug), getQuizForTopic(topicSlug)])
+    : [null, null];
 
   const phase = summary.topic.phaseSlug
     ? curriculum.phases.find((p) => p.slug === summary.topic.phaseSlug)
@@ -85,13 +94,26 @@ export default async function TopicLayout({
             ) : null}
           </div>
           <div className="md:w-64">
-            <p className="text-[10px] uppercase tracking-[0.32em] text-[var(--text-muted)]">
-              Proficiency
-            </p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums text-[var(--text)]">
-              {summary.proficiencyScore}%
-            </p>
-            <ProgressBar value={summary.proficiencyScore} tone={tone} className="mt-2" />
+            {tracked && topicContent ? (
+              <LiveProficiencyHeader
+                topicSlug={topicSlug}
+                totalObjectives={topicContent.learningObjectives.length}
+                totalConcepts={topicContent.keyConcepts.length}
+                totalChallenges={listByTopic(topicSlug, "challenge").length}
+                totalProjects={listByTopic(topicSlug, "project").length}
+                quizTotal={quiz?.items.length ?? 0}
+              />
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-[0.32em] text-[var(--text-muted)]">
+                  Proficiency
+                </p>
+                <p className="mt-1 text-3xl font-semibold tabular-nums text-[var(--text)]">
+                  {summary.proficiencyScore}%
+                </p>
+                <ProgressBar value={summary.proficiencyScore} tone={tone} className="mt-2" />
+              </>
+            )}
           </div>
         </div>
       </Card>

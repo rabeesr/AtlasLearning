@@ -1,5 +1,6 @@
 "use client";
 
+import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,6 +15,7 @@ const primaryLinks = [
 
 export function Toolbar() {
   const pathname = usePathname() ?? "";
+  const { isSignedIn, isLoaded } = useAuth();
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/";
@@ -67,6 +69,21 @@ export function Toolbar() {
         <Link href="/settings" className={navLinkClass(isActive("/settings"))}>
           Settings
         </Link>
+
+        <div className="ml-2 flex items-center">
+          {!isLoaded ? null : isSignedIn ? (
+            <UserButton />
+          ) : (
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="inline-flex h-9 items-center rounded-full bg-[var(--ink)] px-4 text-[14px] font-medium text-white transition-colors duration-200 hover:bg-black"
+              >
+                Sign in
+              </button>
+            </SignInButton>
+          )}
+        </div>
       </div>
     </header>
   );

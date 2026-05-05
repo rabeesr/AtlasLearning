@@ -1,7 +1,9 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
 
 import { AppShell } from "@/components/shared/app-shell";
+import { AuthAwareProviders } from "@/components/shared/auth-aware-providers";
 
 import "./globals.css";
 
@@ -40,10 +42,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${robotoSans.variable} ${robotoMono.variable}`}>
-      <body>
-        <AppShell>{children}</AppShell>
-      </body>
-    </html>
+    <ClerkProvider afterSignOutUrl="/">
+      <html lang="en" className={`${robotoSans.variable} ${robotoMono.variable}`}>
+        <body>
+          <AuthAwareProviders>
+            <AppShell>{children}</AppShell>
+          </AuthAwareProviders>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

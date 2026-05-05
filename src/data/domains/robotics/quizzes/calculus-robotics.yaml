@@ -1,0 +1,82 @@
+topic: calculus-robotics
+items:
+  - id: q1
+    prompt: "Use the Taylor expansion of sin(θ) to estimate the error in sin(θ) ≈ θ at θ = 10° and at θ = 30°. At which angle would you stop trusting the approximation for a balancing controller?"
+    type: short_answer
+    answer: "Truncation error is roughly θ³/6. At 10° (≈0.1745 rad), error ≈ 0.000886 (about 0.5% of sin(10°) ≈ 0.1736). At 30° (≈0.5236 rad), error ≈ 0.0239 (about 4.8% of sin(30°) = 0.5). For a balancing controller, errors past ~5% are dangerous; 30° is already too far, and most designs cap small-angle linearization around 10–15°."
+    rubric:
+      - "Computes both errors using θ³/6 (or equivalent)"
+      - "Picks a cutoff in the 10–15° range with reasoning"
+    difficulty: beginner
+  - id: q2
+    prompt: "For a 2-DOF planar arm with x = L₁cos(θ₁) + L₂cos(θ₁ + θ₂), derive ∂x/∂θ₁ and ∂x/∂θ₂. What does each entry of the Jacobian physically represent?"
+    type: short_answer
+    answer: "∂x/∂θ₁ = −L₁sin(θ₁) − L₂sin(θ₁ + θ₂). ∂x/∂θ₂ = −L₂sin(θ₁ + θ₂). Each entry is the rate of change of the gripper's x-coordinate with respect to one joint angle, holding the others fixed — the linear sensitivity of end-effector x to joint motion at the current configuration."
+    rubric:
+      - "Both partial derivatives correct"
+      - "Identifies entries as linear sensitivities of end-effector position to joint angles"
+    difficulty: beginner
+  - id: q3
+    prompt: "A wheel encoder has a constant bias of 0.01 m/s. After 60 seconds of integrating velocity to estimate position, how large is the drift? Why does this matter even with an excellent IMU?"
+    type: short_answer
+    answer: "Drift = bias × time = 0.01 × 60 = 0.6 m. It matters because every dead-reckoning sensor — including a high-quality IMU — has some bias, and integration grows it linearly (or worse, quadratically when integrating accelerometer data twice for position). Without an absolute reference (GPS, landmarks, a map), drift is unbounded."
+    rubric:
+      - "Drift = 0.6 m"
+      - "Explains that all integrating sensors drift, requiring an absolute reference"
+    difficulty: beginner
+  - id: q4
+    prompt: "Convert ẍ + 4ẋ + 13x = u to state-space form. Solve the characteristic equation; classify the response and explain how you'd recognize the same behavior in a real robot."
+    type: short_answer
+    answer: "State-space: with x₁ = x, x₂ = ẋ, [ẋ₁; ẋ₂] = [[0, 1], [−13, −4]] [x₁; x₂] + [0; 1] u. Characteristic equation s² + 4s + 13 = 0 has roots s = −2 ± 3i — complex with negative real part, so the system is underdamped: it converges but oscillates. In a real robot you'd see the joint overshoot the setpoint and ring before settling."
+    rubric:
+      - "Correct state-space matrices A and B"
+      - "Roots −2 ± 3i and underdamped classification with overshoot/oscillation description"
+    difficulty: intermediate
+  - id: q5
+    prompt: "Implement one RK4 step by hand for ẏ = −y with y(0) = 1, h = 0.1. Compare the result to one Euler step at the same step size and to the analytic answer y(0.1) = e⁻⁰·¹."
+    type: short_answer
+    answer: "RK4: k1=−1; k2=−(1+0.1·−1/2)=−0.95; k3=−(1+0.1·−0.95/2)=−0.9525; k4=−(1+0.1·−0.9525)=−0.90475. y_next = 1 + (0.1/6)(−1 + 2(−0.95) + 2(−0.9525) + (−0.90475)) ≈ 0.9048375. Euler: 1 + 0.1(−1) = 0.9. Analytic: e⁻⁰·¹ ≈ 0.9048374. RK4 matches the analytic answer to ~6 decimals; Euler is off in the third decimal."
+    rubric:
+      - "Computes RK4 step ≈ 0.9048"
+      - "Computes Euler step = 0.9 and compares both to e⁻⁰·¹"
+    difficulty: intermediate
+  - id: q6
+    prompt: "Sketch a potential field for a robot in a 2D room with one obstacle and one goal. Where could gradient descent get stuck, and what would you change to fix it?"
+    type: short_answer
+    answer: "Goal acts as a sink (negative potential), obstacle as a peak (positive potential). Gradient descent gets stuck in local minima — most famously when the obstacle's repulsive field exactly cancels the goal's attractive field along a line directly behind the obstacle (a U-shaped concave obstacle is the worst). Fixes: random restarts, simulated annealing, navigation functions that are provably free of local minima, or a global planner (A*, RRT) on top of the gradient field."
+    rubric:
+      - "Identifies local minima as the failure mode (with concrete geometry)"
+      - "Names at least one fix (restart, escape heuristic, or global planner)"
+    difficulty: intermediate
+  - id: q7
+    prompt: "State the Lagrangian for: minimize x² + y² subject to x + y = 1. Solve for the optimal (x, y) and the multiplier λ. What does λ mean physically?"
+    type: short_answer
+    answer: "ℒ(x, y, λ) = x² + y² + λ(x + y − 1). Stationarity: 2x + λ = 0, 2y + λ = 0, x + y = 1. Therefore x = y = 1/2 and λ = −1. Physically, λ is the marginal cost of the constraint: relaxing the right-hand side from 1 to 1+ε changes the optimum by ≈ −λε = ε. It tells you how much the cost would change per unit relaxation of the constraint."
+    rubric:
+      - "Correct Lagrangian and optimum (1/2, 1/2)"
+      - "Interprets λ as the sensitivity / shadow price of the constraint"
+    difficulty: intermediate
+  - id: q8
+    prompt: "Why does increasing the integral gain Ki of a PID controller often introduce oscillation? Connect the answer to the location of the closed-loop poles."
+    type: short_answer
+    answer: "Adding integral action introduces an extra pole at the origin, raising the system order. As Ki grows, the closed-loop poles move toward the imaginary axis (and may cross into the right half-plane), reducing damping. The system becomes underdamped and oscillates; with enough Ki it goes unstable."
+    rubric:
+      - "Connects integral action to higher system order / extra pole"
+      - "Explains how increased Ki moves poles toward / across the imaginary axis"
+    difficulty: advanced
+  - id: q9
+    prompt: "In the PID-tuner worked example, the gradient is computed by finite differences. Why is that an application of the Taylor expansion, and what's the trade-off between making eps very small vs. very large?"
+    type: short_answer
+    answer: "From Taylor: f(x + ε) ≈ f(x) + f'(x)ε + O(ε²), so f'(x) ≈ (f(x + ε) − f(x))/ε with truncation error O(ε). Too large eps → truncation error dominates (the linear approximation fails). Too small eps → finite-precision subtraction loses significant digits (catastrophic cancellation). Optimum is around √(machine epsilon), typically ~1e-6 to 1e-8 in double precision."
+    rubric:
+      - "Derives the finite difference from the Taylor expansion"
+      - "Identifies both truncation error (large eps) and roundoff (small eps)"
+    difficulty: advanced
+  - id: q10
+    prompt: "Name one situation where you would not use RK4 — and what you'd reach for instead."
+    type: short_answer
+    answer: "Stiff ODEs (very different time scales, e.g., chemical kinetics or stiff mechanical systems with rigid constraints): RK4 needs absurdly small steps to stay stable. Use an implicit method like backward Euler, BDF, or Rosenbrock instead. Other valid examples: hard real-time control loops where a fixed-cost Euler step is preferred for predictability; symplectic integrators for long-horizon orbital / Hamiltonian simulations where energy conservation matters more than per-step accuracy."
+    rubric:
+      - "Names a valid scenario (stiff systems, hard real-time, energy-conserving simulation, etc.)"
+      - "Names an appropriate alternative integrator"
+    difficulty: advanced

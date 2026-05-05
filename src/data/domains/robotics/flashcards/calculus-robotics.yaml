@@ -1,0 +1,86 @@
+topic: calculus-robotics
+cards:
+  - id: c1
+    front: "What is linearization?"
+    back: "Replacing a nonlinear function near an operating point with its tangent line — the first two terms of its Taylor expansion."
+    tags: [linearization]
+  - id: c2
+    front: "State the small-angle approximation and where it comes from."
+    back: "sin(θ) ≈ θ for small θ, from the Taylor series sin(θ) = θ − θ³/6 + …. Used to convert nonlinear pendulum / balancing dynamics into linear ones a CPU can solve in real time."
+    tags: [linearization]
+  - id: c3
+    front: "What is the Jacobian of a robot manipulator?"
+    back: "The matrix of partial derivatives J(q) with J_{ij} = ∂p_i/∂θ_j. It maps joint velocities to end-effector velocities: ṗ = J(q) q̇."
+    tags: [jacobian]
+  - id: c4
+    front: "What does it mean for a manipulator's Jacobian to be near-singular?"
+    back: "The arm has lost a degree of freedom in some direction; inverse kinematics produces wild joint velocities and condition number explodes. Always check σ_min before inverting."
+    tags: [jacobian, pitfalls]
+  - id: c5
+    front: "Write the Euler integration update."
+    back: "x_{t+1} = x_t + v_t · Δt. Cheapest method, but accumulates error fastest and can go unstable on stiff systems."
+    tags: [integration]
+  - id: c6
+    front: "Write the trapezoidal rule for integration."
+    back: "x_{t+1} = x_t + (v_t + v_{t+1})/2 · Δt. Better than Euler for smooth signals like IMU data."
+    tags: [integration]
+  - id: c7
+    front: "Why does dead reckoning drift?"
+    back: "Any constant sensor bias ε integrates to εt — error grows linearly with time. Long-running estimators must fuse an absolute reference (GPS, landmarks, a map)."
+    tags: [integration, drift]
+  - id: c8
+    front: "Convert m·ẍ + c·ẋ + k·x = u to state-space form."
+    back: "Let x₁ = x, x₂ = ẋ. Then [ẋ₁; ẋ₂] = [[0, 1], [−k/m, −c/m]] [x₁; x₂] + [0; 1/m] u — the canonical ẋ = Ax + Bu form."
+    tags: [odes, state-space]
+  - id: c9
+    front: "What is the characteristic equation of m·ẍ + c·ẋ + k·x = 0?"
+    back: "m·s² + c·s + k = 0. Its roots (poles) determine the transient response."
+    tags: [odes, damping]
+  - id: c10
+    front: "Distinguish overdamped, underdamped, and critically damped."
+    back: "Overdamped: real distinct poles, slow no overshoot. Underdamped: complex poles with negative real part, fast but oscillatory. Critically damped: real repeated poles, fastest settling without overshoot."
+    tags: [damping]
+  - id: c11
+    front: "Write the RK4 update."
+    back: "k1=f(t,y); k2=f(t+h/2, y+h·k1/2); k3=f(t+h/2, y+h·k2/2); k4=f(t+h, y+h·k3); y_next = y + (h/6)(k1 + 2k2 + 2k3 + k4)."
+    tags: [rk4]
+  - id: c12
+    front: "Why is RK4 the default ODE integrator?"
+    back: "It samples the slope four times per step and weighted-averages, capturing curvature Euler misses. Stays accurate at much larger step sizes and rarely 'explodes' on stiff systems."
+    tags: [rk4]
+  - id: c13
+    front: "When is RK4 a bad choice?"
+    back: "Very stiff systems (use implicit methods like backward Euler / BDF / Rosenbrock), hard real-time loops needing predictable per-step cost (Euler), or long-horizon Hamiltonian sims (symplectic integrators)."
+    tags: [rk4, pitfalls]
+  - id: c14
+    front: "State the gradient descent update rule."
+    back: "p_next = p_current − α·∇f(p_current). The step size α governs the trade-off between speed and stability."
+    tags: [gradient-descent]
+  - id: c15
+    front: "How does gradient descent on a potential field do path planning?"
+    back: "Goal acts as a sink (negative potential), obstacles as peaks. The robot follows −∇f to slide downhill toward the goal while being pushed away from obstacles."
+    tags: [gradient-descent, path-planning]
+  - id: c16
+    front: "Main failure mode of potential-field path planning?"
+    back: "Local minima (especially behind concave/U-shaped obstacles) trap the robot. Fix with random restarts, escape heuristics, or a global planner on top."
+    tags: [gradient-descent, pitfalls]
+  - id: c17
+    front: "What is the Lagrangian for minimizing E(x) subject to g(x) = 0?"
+    back: "ℒ(x, λ) = E(x) + λ·g(x). Setting all partial derivatives to zero gives the constrained optimum."
+    tags: [lagrange-multipliers]
+  - id: c18
+    front: "Geometric meaning of the Lagrange stationarity condition ∇E = −λ·∇g?"
+    back: "At the optimum, the cost gradient is parallel to the constraint gradient — there's no direction you can move that both reduces cost and respects the constraint."
+    tags: [lagrange-multipliers]
+  - id: c19
+    front: "What does the Lagrange multiplier λ mean physically?"
+    back: "The shadow price / sensitivity of the optimum to the constraint: how much the optimal cost would change per unit relaxation of the constraint."
+    tags: [lagrange-multipliers]
+  - id: c20
+    front: "Why are finite differences an application of the Taylor expansion?"
+    back: "From f(x + ε) ≈ f(x) + f'(x)ε we get f'(x) ≈ (f(x + ε) − f(x))/ε. Truncation error is O(ε); too small ε also amplifies floating-point roundoff (catastrophic cancellation)."
+    tags: [linearization, gradient-descent]
+  - id: c21
+    front: "PID + state-space + RK4 — how do they connect in a tuner?"
+    back: "The plant is the state-space form of a 2nd-order ODE; RK4 steps it forward; PID provides the input u; gradient descent on integrated squared error tunes (Kp, Ki, Kd)."
+    tags: [pid-tuner]

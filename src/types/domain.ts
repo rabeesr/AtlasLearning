@@ -41,6 +41,9 @@ export interface TopicContent {
   summary: string;
   learningObjectives: string[];
   estimatedMinutes?: number;
+  prerequisitesRecap: string[];
+  sources: string[];
+  keyConcepts: string[];
   body: string;
 }
 

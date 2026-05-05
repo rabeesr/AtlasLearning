@@ -17,6 +17,7 @@ export default async function TopicChallengesPage({
       items={items}
       topicLookup={topicLookup}
       emptyMessage="No coding challenges are tagged to this topic."
+      completionTopicSlug={topicSlug}
     />
   );
 }

@@ -1,6 +1,8 @@
 import Link from "next/link";
 
+import { PracticeCompletionToggle } from "@/components/practice/practice-completion-toggle";
 import { Badge, Card } from "@/components/shared/ui";
+import { isTrackedTopic } from "@/lib/progress/tracked-topics";
 import type { CurriculumTopic, PracticeItem } from "@/types/domain";
 
 const KIND_LABEL = { quiz: "Quiz", challenge: "Challenge", project: "Project" } as const;
@@ -8,9 +10,11 @@ const KIND_LABEL = { quiz: "Quiz", challenge: "Challenge", project: "Project" } 
 export function PracticeCard({
   item,
   topicLookup,
+  completionTopicSlug,
 }: {
   item: PracticeItem;
   topicLookup: Map<string, CurriculumTopic>;
+  completionTopicSlug?: string;
 }) {
   const tagged = item.topicSlugs
     .map((slug) => topicLookup.get(slug))
@@ -44,6 +48,15 @@ export function PracticeCard({
         ) : null}
       </div>
       <p className="text-sm leading-6 text-[var(--text-muted)]">{item.summary}</p>
+      {completionTopicSlug &&
+      isTrackedTopic(completionTopicSlug) &&
+      (item.kind === "challenge" || item.kind === "project") ? (
+        <PracticeCompletionToggle
+          topicSlug={completionTopicSlug}
+          itemSlug={item.slug}
+          kind={item.kind}
+        />
+      ) : null}
       <div className="mt-auto flex flex-wrap gap-1.5">
         <Badge>{item.difficulty}</Badge>
         <Badge>

@@ -5,10 +5,13 @@ export function TopicPracticeList({
   items,
   topicLookup,
   emptyMessage,
+  completionTopicSlug,
 }: {
   items: PracticeItem[];
   topicLookup: Map<string, CurriculumTopic>;
   emptyMessage: string;
+  /** When set, challenge/project cards render an interactive "Mark complete" toggle scoped to this topic. */
+  completionTopicSlug?: string;
 }) {
   if (items.length === 0) {
     return (
@@ -21,7 +24,12 @@ export function TopicPracticeList({
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {items.map((item) => (
-        <PracticeCard key={item.slug} item={item} topicLookup={topicLookup} />
+        <PracticeCard
+          key={item.slug}
+          item={item}
+          topicLookup={topicLookup}
+          completionTopicSlug={completionTopicSlug}
+        />
       ))}
     </div>
   );

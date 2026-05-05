@@ -17,6 +17,7 @@ export default async function TopicProjectsPage({
       items={items}
       topicLookup={topicLookup}
       emptyMessage="No projects are tagged to this topic yet."
+      completionTopicSlug={topicSlug}
     />
   );
 }

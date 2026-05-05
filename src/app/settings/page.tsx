@@ -1,7 +1,8 @@
+import { SignInButton, SignOutButton } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
 
 import { Card, SectionHeader } from "@/components/shared/ui";
-import { getCurrentUser } from "@/lib/auth/current-user";
+import { getCurrentUser, isSignedInRequest } from "@/lib/auth/current-user";
 import { getCurriculumData } from "@/lib/content/curriculum";
 import {
   defaultPreferences,
@@ -11,11 +12,12 @@ import {
 } from "@/lib/user/preferences";
 
 export default async function SettingsPage() {
-  const [user, prefs, curriculum] = await Promise.all([
+  const [user, signedIn, curriculum] = await Promise.all([
     getCurrentUser(),
-    loadPreferences("demo-user").then((p) => p ?? defaultPreferences),
+    isSignedInRequest(),
     getCurriculumData(),
   ]);
+  const prefs = (await loadPreferences(user.id)) ?? defaultPreferences;
 
   async function updatePreferencesAction(formData: FormData) {
     "use server";
@@ -44,7 +46,7 @@ export default async function SettingsPage() {
         weeklyDigest: formData.get("alerts_digest") === "on",
       },
     };
-    await savePreferences("demo-user", next);
+    await savePreferences(user.id, next);
     revalidatePath("/settings");
   }
 
@@ -59,10 +61,53 @@ export default async function SettingsPage() {
     <div className="space-y-8">
       <SectionHeader
         eyebrow="Settings"
-        title="Notifications & Spaced Repetition"
-        description={`Configure SMS reminders, alert preferences, and the spaced-repetition cadence for ${user.displayName}.`}
+        title="Account & preferences"
+        description={
+          signedIn
+            ? `Manage your profile, notifications, and spaced-repetition cadence.`
+            : `Sign in to persist your progress, quiz attempts, and learning checklists across devices.`
+        }
       />
 
+      <Card>
+        <h2 className="text-lg font-semibold text-[var(--text)]">Profile</h2>
+        {signedIn ? (
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm text-[var(--text-muted)]">Signed in as</p>
+              <p className="text-base font-medium text-[var(--text)]">{user.displayName}</p>
+              {user.email ? (
+                <p className="text-sm text-[var(--text-muted)]">{user.email}</p>
+              ) : null}
+            </div>
+            <SignOutButton>
+              <button
+                type="button"
+                className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--text)] transition-colors hover:bg-[var(--tile)]"
+              >
+                Sign out
+              </button>
+            </SignOutButton>
+          </div>
+        ) : (
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-[var(--text-muted)]">
+              You&apos;re browsing as a guest. Sign in to save objective check-offs, quiz history,
+              and challenge / project completion to your account.
+            </p>
+            <SignInButton mode="modal">
+              <button
+                type="button"
+                className="inline-flex h-9 items-center rounded-full bg-[var(--ink)] px-4 text-sm font-medium text-white transition-colors hover:bg-black"
+              >
+                Sign in
+              </button>
+            </SignInButton>
+          </div>
+        )}
+      </Card>
+
+      {signedIn ? (
       <form action={updatePreferencesAction} className="space-y-6">
         <Card>
           <h2 className="text-lg font-semibold text-[var(--text)]">SMS notifications</h2>
@@ -233,6 +278,14 @@ export default async function SettingsPage() {
           </button>
         </div>
       </form>
+      ) : (
+        <Card>
+          <h2 className="text-lg font-semibold text-[var(--text)]">Notification preferences</h2>
+          <p className="mt-2 text-sm text-[var(--text-muted)]">
+            Available after sign-in.
+          </p>
+        </Card>
+      )}
     </div>
   );
 }
