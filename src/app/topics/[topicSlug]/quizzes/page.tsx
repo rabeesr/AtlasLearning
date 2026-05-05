@@ -59,6 +59,7 @@ export default async function TopicQuizzesPage({
         items={items}
         topicLookup={topicLookup}
         emptyMessage="No additional practice quizzes are tagged to this topic yet."
+        forceQuizComingSoon
       />
     </div>
   );

@@ -6,12 +6,14 @@ export function TopicPracticeList({
   topicLookup,
   emptyMessage,
   completionTopicSlug,
+  forceQuizComingSoon = false,
 }: {
   items: PracticeItem[];
   topicLookup: Map<string, CurriculumTopic>;
   emptyMessage: string;
   /** When set, challenge/project cards render an interactive "Mark complete" toggle scoped to this topic. */
   completionTopicSlug?: string;
+  forceQuizComingSoon?: boolean;
 }) {
   if (items.length === 0) {
     return (
@@ -29,6 +31,7 @@ export function TopicPracticeList({
           item={item}
           topicLookup={topicLookup}
           completionTopicSlug={completionTopicSlug}
+          forceQuizComingSoon={forceQuizComingSoon}
         />
       ))}
     </div>

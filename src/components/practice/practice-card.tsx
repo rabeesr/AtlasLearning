@@ -11,15 +11,26 @@ export function PracticeCard({
   item,
   topicLookup,
   completionTopicSlug,
+  forceQuizComingSoon = false,
 }: {
   item: PracticeItem;
   topicLookup: Map<string, CurriculumTopic>;
   completionTopicSlug?: string;
+  forceQuizComingSoon?: boolean;
 }) {
   const tagged = item.topicSlugs
     .map((slug) => topicLookup.get(slug))
     .filter((t): t is CurriculumTopic => Boolean(t));
   const isCrossTopic = item.topicSlugs.length > 1;
+
+  // An item is "ready" when one of its tagged topics has been fully built
+  // out (currently the tracked topics only — Linear Algebra and Calculus).
+  // For quizzes, the ready item links straight to the mastery quiz player.
+  const readyTopic = tagged.find((t) => isTrackedTopic(t.slug));
+  const playableQuizTopic =
+    item.kind === "quiz" && !forceQuizComingSoon ? readyTopic : undefined;
+  const isComingSoon = !readyTopic;
+  const showComingSoon = item.kind === "quiz" ? forceQuizComingSoon || isComingSoon : isComingSoon;
 
   const titleNode =
     item.kind === "challenge" ? (
@@ -27,6 +38,14 @@ export function PracticeCard({
         href={`/challenges/${item.slug}`}
         className="mt-1 block text-base font-semibold text-[var(--text)] transition hover:text-[var(--accent)]"
         aria-label={`Open challenge: ${item.title}`}
+      >
+        {item.title}
+      </Link>
+    ) : playableQuizTopic ? (
+      <Link
+        href={`/topics/${playableQuizTopic.slug}/quizzes/play`}
+        className="mt-1 block text-base font-semibold text-[var(--text)] transition hover:text-[var(--accent)]"
+        aria-label={`Take the ${playableQuizTopic.name} mastery quiz`}
       >
         {item.title}
       </Link>
@@ -43,9 +62,16 @@ export function PracticeCard({
           </p>
           {titleNode}
         </div>
-        {isCrossTopic ? (
-          <Badge tone="accent">spans {item.topicSlugs.length} topics</Badge>
-        ) : null}
+        <div className="flex flex-col items-end gap-1">
+          {isCrossTopic ? (
+            <Badge tone="accent">spans {item.topicSlugs.length} topics</Badge>
+          ) : null}
+          {showComingSoon ? (
+            <Badge>Coming soon</Badge>
+          ) : item.kind === "quiz" ? (
+            <Badge tone="success">Playable</Badge>
+          ) : null}
+        </div>
       </div>
       <p className="text-sm leading-6 text-[var(--text-muted)]">{item.summary}</p>
       {completionTopicSlug &&
