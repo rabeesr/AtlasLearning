@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ComponentProps } from "react";
 
 import { Card } from "@/components/shared/ui";
 import { getCurriculumData } from "@/lib/content/curriculum";
+import { getSubtopicLearnHref } from "@/lib/content/topic-learn-sections";
 import { getLearnerDashboardView } from "@/lib/learner/learner-data";
 import { listByTopic } from "@/lib/practice/practice-repository";
 
@@ -30,6 +32,7 @@ export default async function TopicOverviewPage({
   const prereqs = summary.topic.dependencySlugs
     .map((slug) => curriculum.topics.find((t) => t.slug === slug))
     .filter((t): t is NonNullable<typeof t> => Boolean(t));
+  type LinkHref = ComponentProps<typeof Link>["href"];
 
   return (
     <div className="grid gap-5 md:grid-cols-3">
@@ -45,12 +48,12 @@ export default async function TopicOverviewPage({
               {subSummaries.map((sub) => (
                 <li key={sub.topic.slug}>
                   <Link
-                    href={`/topics/${sub.topic.slug}`}
-                    className="flex items-center justify-between gap-3 rounded-md border border-[var(--border)] bg-[var(--panel-muted)] px-3 py-2 text-sm transition hover:border-[var(--border-strong)]"
+                    href={getSubtopicLearnHref(summary.topic.slug, sub.topic.slug) as LinkHref}
+                    className="flex items-center justify-between gap-3 rounded-md border border-[var(--border)] bg-[var(--panel-muted)] px-3 py-2 text-sm transition hover:border-[var(--border-strong)] hover:bg-[var(--panel)]"
                   >
                     <span className="text-[var(--text)]">{sub.topic.name}</span>
-                    <span className="text-xs tabular-nums text-[var(--text-muted)]">
-                      {sub.proficiencyScore}%
+                    <span className="text-xs uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                      Learn
                     </span>
                   </Link>
                 </li>

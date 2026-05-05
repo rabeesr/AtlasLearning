@@ -17,7 +17,11 @@ export default async function SettingsPage() {
     isSignedInRequest(),
     getCurriculumData(),
   ]);
-  const prefs = (await loadPreferences(user.id)) ?? defaultPreferences;
+  const prefs =
+    (await loadPreferences(user.id, { email: user.email, timezone: user.timezone })) ??
+    defaultPreferences;
+  const timezoneOptions =
+    typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [user.timezone];
 
   async function updatePreferencesAction(formData: FormData) {
     "use server";
@@ -28,9 +32,11 @@ export default async function SettingsPage() {
         : "all";
 
     const next = {
-      sms: {
-        enabled: formData.get("sms_enabled") === "on",
-        phoneNumber: String(formData.get("sms_phone") ?? ""),
+      review: {
+        enabled: formData.get("review_enabled") === "on",
+        emailAddress: String(formData.get("review_email") ?? "").trim(),
+        timezone: String(formData.get("review_timezone") ?? user.timezone),
+        preferredSendTime: String(formData.get("review_send_time") ?? "09:00"),
         quietHoursStart: String(formData.get("sms_quiet_start") ?? "22:00"),
         quietHoursEnd: String(formData.get("sms_quiet_end") ?? "08:00"),
       },
@@ -45,6 +51,7 @@ export default async function SettingsPage() {
         streakReminders: formData.get("alerts_streak") === "on",
         weeklyDigest: formData.get("alerts_digest") === "on",
       },
+      lastSentAt: prefs.lastSentAt,
     };
     await savePreferences(user.id, next);
     revalidatePath("/settings");
@@ -110,36 +117,58 @@ export default async function SettingsPage() {
       {signedIn ? (
       <form action={updatePreferencesAction} className="space-y-6">
         <Card>
-          <h2 className="text-lg font-semibold text-[var(--text)]">SMS notifications</h2>
+          <h2 className="text-lg font-semibold text-[var(--text)]">Daily review emails</h2>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Get short SMS prompts for spaced-repetition quizzes and decay alerts.
-            <span className="ml-1 italic">SMS sending is not wired in this build — preferences are saved locally.</span>
+            Get one spaced-repetition review by email and reply inline to log the result.
           </p>
           <div className="mt-4 space-y-4">
             <Label>
               <input
                 type="checkbox"
-                name="sms_enabled"
-                defaultChecked={prefs.sms.enabled}
+                name="review_enabled"
+                defaultChecked={prefs.review.enabled}
                 className="size-4"
               />
-              <span>Enable SMS notifications</span>
+              <span>Enable daily review emails</span>
             </Label>
-            <div className="grid gap-3 md:grid-cols-3">
-              <Field label="Phone number">
+            <div className="grid gap-3 md:grid-cols-2">
+              <Field label="Destination email">
                 <input
-                  type="tel"
-                  name="sms_phone"
-                  placeholder="+1 555 555 5555"
-                  defaultValue={prefs.sms.phoneNumber}
+                  type="email"
+                  name="review_email"
+                  placeholder="you@example.com"
+                  defaultValue={prefs.review.emailAddress}
                   className={inputClass}
                 />
+              </Field>
+              <Field label="Preferred send time">
+                <input
+                  type="time"
+                  name="review_send_time"
+                  defaultValue={prefs.review.preferredSendTime}
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <Field label="Timezone">
+                <select
+                  name="review_timezone"
+                  defaultValue={prefs.review.timezone}
+                  className={inputClass}
+                >
+                  {timezoneOptions.map((timezone) => (
+                    <option key={timezone} value={timezone}>
+                      {timezone}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field label="Quiet hours start">
                 <input
                   type="time"
                   name="sms_quiet_start"
-                  defaultValue={prefs.sms.quietHoursStart}
+                  defaultValue={prefs.review.quietHoursStart}
                   className={inputClass}
                 />
               </Field>
@@ -147,7 +176,7 @@ export default async function SettingsPage() {
                 <input
                   type="time"
                   name="sms_quiet_end"
-                  defaultValue={prefs.sms.quietHoursEnd}
+                  defaultValue={prefs.review.quietHoursEnd}
                   className={inputClass}
                 />
               </Field>

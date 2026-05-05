@@ -1,6 +1,8 @@
 import Link from "next/link";
+import type { ComponentProps } from "react";
 
 import { Badge, Card, ProgressBar } from "@/components/shared/ui";
+import { getSubtopicLearnHref } from "@/lib/content/topic-learn-sections";
 import { STATUS_LABEL, STATUS_TONE } from "@/lib/learner/status";
 import type { TopicSummary } from "@/types/learner";
 
@@ -11,6 +13,8 @@ export function TopicProficiencyGrid({
   summaries: TopicSummary[];
   topicsBySlug: Map<string, TopicSummary>;
 }) {
+  type LinkHref = ComponentProps<typeof Link>["href"];
+
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {summaries.map((summary) => {
@@ -55,13 +59,13 @@ export function TopicProficiencyGrid({
                 {subSummaries.slice(0, 5).map((sub) => (
                   <li key={sub.topic.slug} className="flex items-center justify-between gap-2">
                     <Link
-                      href={`/topics/${sub.topic.slug}`}
+                      href={getSubtopicLearnHref(summary.topic.slug, sub.topic.slug) as LinkHref}
                       className="truncate text-[var(--text-muted)] transition hover:text-[var(--text)]"
                     >
                       {sub.topic.name}
                     </Link>
-                    <span className="shrink-0 tabular-nums text-[var(--text-muted)]">
-                      {sub.proficiencyScore}%
+                    <span className="shrink-0 text-[10px] uppercase tracking-[0.24em] text-[var(--text-muted)]">
+                      Learn
                     </span>
                   </li>
                 ))}

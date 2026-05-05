@@ -102,7 +102,7 @@ export default async function DashboardPage() {
           index={3}
           eyebrow="All Topics"
           title="Top-level proficiency map"
-          description="Top-level topics with subtopic proficiency at a glance. Click in for the full hub."
+          description="Top-level topics with their relevant subtopics at a glance. Click in for the full hub."
         />
         <TopicProficiencyGrid summaries={topLevelSummaries} topicsBySlug={topicsBySlug} />
       </section>

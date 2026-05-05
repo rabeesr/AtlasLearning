@@ -6,6 +6,10 @@ import { isTrackedTopic } from "@/lib/progress/tracked-topics";
 import type { CurriculumTopic, PracticeItem } from "@/types/domain";
 
 const KIND_LABEL = { quiz: "Quiz", challenge: "Challenge", project: "Project" } as const;
+const LIVE_QUIZ_ROUTE_BY_ITEM_SLUG: Record<string, string> = {
+  "linear-algebra-basics": "linear-algebra-robotics",
+  "calculus-foundations": "calculus-robotics",
+};
 
 export function PracticeCard({
   item,
@@ -23,14 +27,17 @@ export function PracticeCard({
     .filter((t): t is CurriculumTopic => Boolean(t));
   const isCrossTopic = item.topicSlugs.length > 1;
 
-  // An item is "ready" when one of its tagged topics has been fully built
-  // out (currently the tracked topics only — Linear Algebra and Calculus).
-  // For quizzes, the ready item links straight to the mastery quiz player.
   const readyTopic = tagged.find((t) => isTrackedTopic(t.slug));
-  const playableQuizTopic =
-    item.kind === "quiz" && !forceQuizComingSoon ? readyTopic : undefined;
+  const playableQuizTopicSlug =
+    item.kind === "quiz" && !forceQuizComingSoon
+      ? LIVE_QUIZ_ROUTE_BY_ITEM_SLUG[item.slug]
+      : undefined;
+  const playableQuizTopic = playableQuizTopicSlug
+    ? topicLookup.get(playableQuizTopicSlug)
+    : undefined;
   const isComingSoon = !readyTopic;
-  const showComingSoon = item.kind === "quiz" ? forceQuizComingSoon || isComingSoon : isComingSoon;
+  const showComingSoon =
+    item.kind === "quiz" ? forceQuizComingSoon || !playableQuizTopic : isComingSoon;
 
   const titleNode =
     item.kind === "challenge" ? (
