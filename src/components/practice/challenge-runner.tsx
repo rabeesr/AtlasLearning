@@ -3,14 +3,14 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
+import { ChallengeAttemptsPanel } from "@/components/practice/challenge-attempts-panel";
+import { ChallengeHints } from "@/components/practice/challenge-hints";
+import { ChallengeTestRow } from "@/components/practice/challenge-test-row";
 import { Badge, Button, Card } from "@/components/shared/ui";
 import { TopicMarkdown } from "@/components/topic/topic-markdown";
 import { useChallengeTracker } from "@/lib/practice/challenge-tracker";
 import { usePyodideRunner } from "@/lib/pyodide/use-pyodide-runner";
-import type {
-  CodingChallenge,
-  ChallengeTestResult,
-} from "@/types/practice";
+import type { CodingChallenge, ChallengeTest } from "@/types/practice";
 
 // Monaco is heavy and browser-only — never SSR it.
 const MonacoEditor = dynamic(
@@ -35,6 +35,9 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [attemptsRefreshKey, setAttemptsRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,25 +56,59 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
   }, [runner.lastResults]);
 
   const canReveal = hasSubmitted || gaveUp;
+  const canRun = runner.status === "ready" || runner.status === "running";
 
   const onRun = async () => {
     const outcome = await runner.run(code, challenge.tests, challenge.pythonPackages);
     if (outcome && attemptId) {
       setHasSubmitted(true);
       await tracker.recordRun(attemptId, outcome.results, code);
+      setAttemptsRefreshKey((k) => k + 1);
     }
+  };
+
+  const onRunSingleTest = async (test: ChallengeTest) => {
+    await runner.runTest(code, test, challenge.pythonPackages);
   };
 
   const onReveal = async () => {
     setShowSolution(true);
-    if (attemptId) await tracker.markRevealed(attemptId);
+    if (attemptId) {
+      await tracker.markRevealed(attemptId);
+      setAttemptsRefreshKey((k) => k + 1);
+    }
   };
 
   const onGiveUp = () => setGaveUp(true);
 
+  const isDirty = code !== challenge.starterCode;
+
+  const onReset = () => {
+    if (!isDirty) {
+      setCode(challenge.starterCode);
+      return;
+    }
+    setConfirmReset(true);
+  };
+  const confirmResetYes = () => {
+    setCode(challenge.starterCode);
+    setConfirmReset(false);
+  };
+  const confirmResetNo = () => setConfirmReset(false);
+
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Clipboard blocked — silent failure is fine.
+    }
+  };
+
   return (
     <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-      {/* LEFT — Problem */}
+      {/* LEFT — Problem + hints */}
       <Card interactive={false}>
         <p className="text-[12px] font-semibold uppercase tracking-[0.30em] text-[var(--accent)]">
           Problem
@@ -79,6 +116,12 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
         <div className="mt-4">
           <TopicMarkdown content={challenge.problemMarkdown} />
         </div>
+        {challenge.hints && challenge.hints.length > 0 ? (
+          <ChallengeHints
+            challengeSlug={challenge.slug}
+            hints={challenge.hints}
+          />
+        ) : null}
       </Card>
 
       {/* RIGHT — Editor + results */}
@@ -112,17 +155,39 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 onClick={onRun}
                 variant="primary"
-                className={
-                  runner.status === "ready" || runner.status === "running"
-                    ? ""
-                    : "pointer-events-none opacity-50"
-                }
+                className={canRun ? "" : "pointer-events-none opacity-50"}
               >
                 {runner.status === "running" ? "Running…" : "Run code"}
+              </Button>
+              {confirmReset ? (
+                <span className="inline-flex items-center gap-2 rounded-full bg-[var(--tile)] px-3 py-1 text-[13px] text-[var(--ink)]">
+                  Reset?
+                  <button
+                    type="button"
+                    onClick={confirmResetYes}
+                    className="rounded-full bg-[var(--ink)] px-2.5 py-0.5 text-[12px] font-medium text-white hover:bg-black"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={confirmResetNo}
+                    className="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-medium text-[var(--ink-muted)] hover:text-[var(--ink)]"
+                  >
+                    Cancel
+                  </button>
+                </span>
+              ) : (
+                <Button onClick={onReset} variant="secondary" size="sm">
+                  Reset
+                </Button>
+              )}
+              <Button onClick={onCopy} variant="secondary" size="sm">
+                {copied ? "Copied" : "Copy"}
               </Button>
               {!gaveUp && !hasSubmitted ? (
                 <Button onClick={onGiveUp} variant="ghost">
@@ -141,11 +206,18 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
                 Show example solution
               </Button>
             </div>
-            {runner.lastResults ? (
-              <Badge tone={passed === runner.lastResults.length ? "success" : "neutral"}>
-                {passed} / {runner.lastResults.length} passing
-              </Badge>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {runner.totalMs !== null ? (
+                <span className="font-mono text-[12px] tabular-nums text-[var(--ink-faint)]">
+                  {runner.totalMs}ms
+                </span>
+              ) : null}
+              {runner.lastResults ? (
+                <Badge tone={passed === runner.lastResults.length ? "success" : "neutral"}>
+                  {passed} / {runner.lastResults.length} passing
+                </Badge>
+              ) : null}
+            </div>
           </div>
         </Card>
 
@@ -166,12 +238,20 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
               const result = runner.lastResults?.find(
                 (r) => r.testName === t.name,
               );
-              return <TestRow key={t.name} name={t.name} result={result} />;
+              return (
+                <ChallengeTestRow
+                  key={t.name}
+                  test={t}
+                  result={result}
+                  canRun={canRun}
+                  onRunSingle={() => onRunSingleTest(t)}
+                />
+              );
             })}
           </ul>
         </Card>
 
-        {/* Console / errors */}
+        {/* Console / errors — grouped by origin */}
         <Card interactive={false}>
           <p className="text-[12px] font-semibold uppercase tracking-[0.30em] text-[var(--accent)]">
             Console
@@ -186,13 +266,56 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
 {runner.traceback}
             </pre>
           ) : null}
-          <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
-            stdout
-          </p>
-          <pre className="mt-2 max-h-[260px] overflow-auto whitespace-pre-wrap rounded-[14px] bg-[var(--tile-deep)] px-4 py-3 font-mono text-[13px] leading-6 text-[var(--ink-muted)]">
-            {runner.stdout || "(run code to see output)"}
-          </pre>
+          {runner.consoleLines.length > 0 ? (
+            <div className="mt-3 max-h-[320px] space-y-2 overflow-auto">
+              {runner.consoleLines.map((line, i) => (
+                <div key={i} className="rounded-[14px] bg-[var(--tile-deep)] px-4 py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--ink-faint)]">
+                    {line.origin === "user" ? "user code" : `test · ${line.origin}`}
+                  </p>
+                  <pre className="mt-1.5 whitespace-pre-wrap font-mono text-[13px] leading-6 text-[var(--ink-muted)]">
+                    {line.text}
+                  </pre>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <pre className="mt-3 rounded-[14px] bg-[var(--tile-deep)] px-4 py-3 font-mono text-[13px] leading-6 text-[var(--ink-muted)]">
+              {runner.stdout || "(run code to see output)"}
+            </pre>
+          )}
+
+          {/* Inline matplotlib plots — visualization-hook bonus feature. */}
+          {runner.plots.length > 0 ? (
+            <div className="mt-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--accent)]">
+                Plots ({runner.plots.length})
+              </p>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                {runner.plots.map((p, i) => (
+                  <div
+                    key={i}
+                    className="overflow-hidden rounded-[14px] bg-white p-2"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`data:image/png;base64,${p.pngBase64}`}
+                      alt={`Plot ${i + 1}`}
+                      className="block w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </Card>
+
+        {/* Attempt history (signed-in only — hidden otherwise) */}
+        <ChallengeAttemptsPanel
+          challengeSlug={challenge.slug}
+          totalTests={challenge.tests.length}
+          refreshKey={attemptsRefreshKey}
+        />
 
         {/* Example solution */}
         {showSolution ? (
@@ -248,35 +371,4 @@ function RunnerStatusPill({
     return <Badge tone="danger">Runtime error</Badge>;
   }
   return <Badge tone="success">Ready</Badge>;
-}
-
-function TestRow({
-  name,
-  result,
-}: {
-  name: string;
-  result?: ChallengeTestResult;
-}) {
-  let dotClass = "border border-[var(--ink-faint)]";
-  if (result?.passed) {
-    dotClass = "bg-[var(--success)]";
-  } else if (result && !result.passed) {
-    dotClass = "bg-[var(--danger)]";
-  }
-  return (
-    <li className="flex flex-col gap-1.5 rounded-[14px] bg-white px-4 py-3">
-      <div className="flex items-center gap-3 font-mono text-[14px] text-[var(--ink)]">
-        <span
-          aria-hidden
-          className={`inline-flex h-3.5 w-3.5 flex-none rounded-full ${dotClass}`}
-        />
-        {name}
-      </div>
-      {result?.errorMessage ? (
-        <pre className="ml-6 whitespace-pre-wrap font-mono text-[12px] leading-5 text-[var(--danger)]">
-          {result.errorMessage}
-        </pre>
-      ) : null}
-    </li>
-  );
 }

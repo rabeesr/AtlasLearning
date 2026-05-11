@@ -1,5 +1,5 @@
-import { PracticeCard } from "@/components/practice/practice-card";
 import { PracticeFilters } from "@/components/practice/practice-filters";
+import { PracticeGrid } from "@/components/practice/practice-grid";
 import { SectionHeader } from "@/components/shared/ui";
 import { getCurriculumData } from "@/lib/content/curriculum";
 import { filterPractice, listPracticeItems } from "@/lib/practice/practice-repository";
@@ -81,11 +81,10 @@ export async function GlobalPracticePage({
               No items match the current filters.
             </div>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3">
-              {filtered.map((item) => (
-                <PracticeCard key={item.slug} item={item} topicLookup={topicLookup} />
-              ))}
-            </div>
+            <PracticeGrid
+              items={filtered}
+              topicLookup={Array.from(topicLookup.entries())}
+            />
           )}
         </div>
       </div>

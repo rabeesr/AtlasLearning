@@ -1,36 +1,42 @@
 import math
 
 
-def test_derivative_of_sin_at_zero():
+def test_constant_angular_velocity():
+    # theta(t) = sin(t); at t=0, omega = cos(0) = 1 rad/s.
     est = derivative(math.sin, 0.0)
-    assert abs(est - 1.0) < 1e-6, f"d/dx sin(x) at 0 is 1, got {est}"
-
-
-def test_derivative_of_cos_at_pi_over_two():
-    est = derivative(math.cos, math.pi / 2)
-    assert abs(est - (-1.0)) < 1e-6, (
-        f"d/dx cos(x) at π/2 is -1, got {est}"
+    assert abs(est - 1.0) < 1e-6, (
+        f"omega at t=0 for sin(t) should be 1 rad/s; got {est}"
     )
 
 
-def test_derivative_of_exp():
+def test_decelerating_joint():
+    # theta(t) = cos(t); at t=pi/2, omega = -sin(pi/2) = -1 rad/s.
+    est = derivative(math.cos, math.pi / 2)
+    assert abs(est - (-1.0)) < 1e-6, (
+        f"omega at t=pi/2 for cos(t) should be -1 rad/s; got {est}"
+    )
+
+
+def test_exponential_motion_profile():
+    # theta(t) = e^t -> theta'(t) = e^t.
     x = 1.5
     est = derivative(math.exp, x)
     assert abs(est - math.exp(x)) < 1e-4, (
-        f"d/dx e^x at {x} is {math.exp(x)}, got {est}"
+        f"d/dx e^x at {x} should be {math.exp(x)}; got {est}"
     )
 
 
-def test_derivative_of_polynomial():
-    # d/dx (x^3) = 3 x^2; at x=2 that's 12.
-    est = derivative(lambda x: x ** 3, 2.0)
-    assert abs(est - 12.0) < 1e-6, f"d/dx x^3 at 2 is 12, got {est}"
+def test_cubic_position_profile():
+    # theta(t) = t^3 -> theta'(t) = 3 t^2; at t=2 that's 12.
+    est = derivative(lambda t: t ** 3, 2.0)
+    assert abs(est - 12.0) < 1e-6, (
+        f"d/dx t^3 at 2 should be 12; got {est}"
+    )
 
 
 def test_step_size_argument_is_used():
-    # If h is plumbed correctly, a much larger h on a polynomial gives a
-    # still-tight answer because central differences are exact on quadratics.
-    est = derivative(lambda x: 2 * x ** 2 + x, 3.0, h=1e-2)
+    # Central differences are exact on quadratics, so even h=1e-2 must be tight.
+    est = derivative(lambda t: 2 * t ** 2 + t, 3.0, h=1e-2)
     assert abs(est - 13.0) < 1e-6, (
-        f"d/dx (2x^2+x) at 3 is 13 (exact for central diff on a quadratic), got {est}"
+        f"central diff is exact on a quadratic; 2t^2+t at t=3 -> 13; got {est}"
     )

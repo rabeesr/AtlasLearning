@@ -68,17 +68,46 @@ export interface CodingChallenge {
   tests: ChallengeTest[];
   /** Optional extra packages to install via micropip on top of the defaults. */
   pythonPackages?: string[];
+  /**
+   * Progressive hints, ordered easy -> strong. The UI reveals them one at a
+   * time. 2-3 entries recommended: nudge, structural pointer, near-solution.
+   */
+  hints?: string[];
 }
 
 export interface ChallengeTestResult {
   testName: string;
   passed: boolean;
   errorMessage?: string;
+  /** Wall time of just this test, in ms. */
+  durationMs?: number;
+  /** Anything the test itself printed to stdout. */
+  stdout?: string;
+}
+
+/** Console line tagged by origin, surfaced in the runner's console panel. */
+export interface ConsoleLine {
+  /** "user" for user code, otherwise the test name that produced it. */
+  origin: "user" | string;
+  text: string;
+}
+
+/** PNG plot captured from matplotlib during a run. */
+export interface ChallengePlot {
+  /** Base64-encoded PNG, no data: prefix. */
+  pngBase64: string;
 }
 
 export interface ChallengeRunOutcome {
   results: ChallengeTestResult[];
+  /** Concatenated, untagged stdout — kept for backwards compatibility. */
   stdout: string;
+  /** Tagged stdout per origin (user code or specific test). */
+  consoleLines?: ConsoleLine[];
   /** Set when user code itself threw — surface in the console panel. */
   traceback?: string;
+  /** Total wall time of the run in ms. */
+  totalMs?: number;
+  /** Inline PNG plots captured from matplotlib during user code. */
+  plots?: ChallengePlot[];
 }

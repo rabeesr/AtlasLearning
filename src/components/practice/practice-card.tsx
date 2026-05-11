@@ -16,11 +16,14 @@ export function PracticeCard({
   topicLookup,
   completionTopicSlug,
   forceQuizComingSoon = false,
+  solved = false,
 }: {
   item: PracticeItem;
   topicLookup: Map<string, CurriculumTopic>;
   completionTopicSlug?: string;
   forceQuizComingSoon?: boolean;
+  /** Render a Solved badge — only set true for signed-in users. */
+  solved?: boolean;
 }) {
   const tagged = item.topicSlugs
     .map((slug) => topicLookup.get(slug))
@@ -78,6 +81,7 @@ export function PracticeCard({
           ) : item.kind === "quiz" ? (
             <Badge tone="success">Playable</Badge>
           ) : null}
+          {solved ? <Badge tone="success">Solved ✓</Badge> : null}
         </div>
       </div>
       <p className="text-sm leading-6 text-[var(--text-muted)]">{item.summary}</p>

@@ -11,14 +11,33 @@
  *     -> { type: "init-progress", message }*
  *     -> { type: "ready" } | { type: "init-error", message }
  *
- *   { type: "run", id, userCode, tests: { name, code }[] }
- *     -> { type: "run-result", id, results, stdout, traceback? }
+ *   { type: "run", id, userCode, tests: { name, code }[], pythonPackages? }
+ *     -> { type: "run-result", id, results, stdout, consoleLines, traceback?,
+ *           totalMs, plots }
+ *
+ *   { type: "run-test", id, userCode, test: { name, code }, pythonPackages? }
+ *     -> same as "run-result" but with a single test entry. Used for the
+ *        per-test "play" button on the expanded test row.
  *
  * Tests run in the same global namespace as user code (after the user code has
  * been exec'd). Each test is wrapped so it can fail with AssertionError or any
  * other Exception and the error message is captured per-test. User code that
  * raises is reported via a traceback in the response — tests are still
  * attempted so the user sees which tests would have run.
+ *
+ * stdout / stderr capture
+ * -----------------------
+ * Capture happens BOTH around user code AND around each test. We snapshot
+ * `_atlas_stdout.getvalue()` after the user code, then truncate the buffer and
+ * snapshot again after each test. The per-test slice is attached to that
+ * test's result; the user-code slice is the first ConsoleLine entry with
+ * origin="user". The UI surfaces both grouped.
+ *
+ * matplotlib capture
+ * ------------------
+ * Right before user code runs we set the matplotlib backend to "Agg" and
+ * hook `pyplot.show`. After user code (and tests) we collect any captured
+ * figures, encode each as PNG, and ship base64 strings inline.
  */
 
 declare const self: DedicatedWorkerGlobalScope & {
@@ -92,74 +111,204 @@ interface RunRequest {
   pythonPackages?: string[];
 }
 
-async function handleRun(req: RunRequest) {
-  const pyodide = await ensurePyodide();
+interface RunTestRequest {
+  id: number;
+  userCode: string;
+  test: { name: string; code: string };
+  pythonPackages?: string[];
+}
 
-  // Optional per-challenge extra packages — try Pyodide-built first, fall back to micropip.
-  if (req.pythonPackages && req.pythonPackages.length > 0) {
-    try {
-      await pyodide.loadPackage(req.pythonPackages);
-    } catch {
-      await pyodide.loadPackage("micropip");
-      const micropip = pyodide.pyimport("micropip");
-      await micropip.install(req.pythonPackages);
-    }
+interface RunOutcome {
+  results: {
+    testName: string;
+    passed: boolean;
+    errorMessage?: string;
+    durationMs?: number;
+    stdout?: string;
+  }[];
+  stdout: string;
+  consoleLines: { origin: string; text: string }[];
+  traceback?: string;
+  totalMs: number;
+  plots: { pngBase64: string }[];
+}
+
+async function loadExtraPackages(pyodide: any, packages?: string[]) {
+  if (!packages || packages.length === 0) return;
+  try {
+    await pyodide.loadPackage(packages);
+  } catch {
+    await pyodide.loadPackage("micropip");
+    const micropip = pyodide.pyimport("micropip");
+    await micropip.install(packages);
   }
+}
 
-  // Capture stdout/stderr.
+/**
+ * Reset the stdout/stderr StringIO buffers and matplotlib state, returning a
+ * function that snapshots whatever was emitted since the last reset.
+ */
+async function setupRunEnv(pyodide: any) {
   await pyodide.runPythonAsync(`
 import sys, io
 _atlas_stdout = io.StringIO()
 _atlas_stderr = io.StringIO()
 sys.stdout = _atlas_stdout
 sys.stderr = _atlas_stderr
-`);
 
-  // Fresh user namespace each run.
+# matplotlib: switch to a non-interactive backend and capture figures on show().
+try:
+    import matplotlib
+    matplotlib.use("Agg", force=True)
+    import matplotlib.pyplot as _plt  # noqa
+    _atlas_captured_figs = []
+    def _atlas_show(*args, **kwargs):
+        # Capture every open figure when user code calls plt.show().
+        import matplotlib.pyplot as plt
+        for num in plt.get_fignums():
+            _atlas_captured_figs.append(plt.figure(num))
+    _plt.show = _atlas_show
+except Exception:
+    _atlas_captured_figs = []
+`);
+}
+
+async function snapshotStdout(pyodide: any): Promise<string> {
+  const out = (await pyodide.runPythonAsync(`
+_v = _atlas_stdout.getvalue()
+_atlas_stdout.truncate(0); _atlas_stdout.seek(0)
+_v
+`)) as string;
+  const errOut = (await pyodide.runPythonAsync(`
+_v = _atlas_stderr.getvalue()
+_atlas_stderr.truncate(0); _atlas_stderr.seek(0)
+_v
+`)) as string;
+  return errOut ? `${out}${out && !out.endsWith("\n") ? "\n" : ""}[stderr] ${errOut}` : out;
+}
+
+async function collectPlots(pyodide: any): Promise<{ pngBase64: string }[]> {
+  try {
+    const result = (await pyodide.runPythonAsync(`
+import io, base64
+_pngs = []
+try:
+    import matplotlib.pyplot as plt
+    nums = plt.get_fignums()
+    # Include both explicitly captured figures and any still-open ones.
+    figs = list(_atlas_captured_figs) + [plt.figure(n) for n in nums]
+    seen = set()
+    for fig in figs:
+        if id(fig) in seen:
+            continue
+        seen.add(id(fig))
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight", dpi=110)
+        _pngs.append(base64.b64encode(buf.getvalue()).decode("ascii"))
+    plt.close("all")
+    _atlas_captured_figs.clear()
+except Exception:
+    pass
+_pngs
+`)) as unknown;
+    const arr = (result as { toJs?: () => string[] })?.toJs
+      ? (result as { toJs: () => string[] }).toJs()
+      : (result as string[]);
+    return Array.isArray(arr) ? arr.map((pngBase64) => ({ pngBase64 })) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function executeRun(
+  pyodide: any,
+  userCode: string,
+  tests: { name: string; code: string }[],
+  pythonPackages?: string[],
+): Promise<RunOutcome> {
+  await loadExtraPackages(pyodide, pythonPackages);
+  await setupRunEnv(pyodide);
+
+  const startTotal = performance.now();
+  const consoleLines: { origin: string; text: string }[] = [];
   const userNs = pyodide.toPy({});
 
   let traceback: string | undefined;
   try {
-    await pyodide.runPythonAsync(req.userCode, { globals: userNs });
+    await pyodide.runPythonAsync(userCode, { globals: userNs });
   } catch (err: any) {
     traceback = err?.message ?? String(err);
   }
+  const userStdout = await snapshotStdout(pyodide);
+  if (userStdout.length > 0) {
+    consoleLines.push({ origin: "user", text: userStdout });
+  }
 
-  const results: { testName: string; passed: boolean; errorMessage?: string }[] = [];
-
-  for (const test of req.tests) {
+  const results: RunOutcome["results"] = [];
+  for (const test of tests) {
     if (traceback) {
-      // If user code failed, every test is reported as not-run with a clear message.
       results.push({
         testName: test.name,
         passed: false,
         errorMessage: "Not run — user code raised before tests executed.",
+        durationMs: 0,
       });
       continue;
     }
+    const t0 = performance.now();
+    let passed = true;
+    let errorMessage: string | undefined;
     try {
       await pyodide.runPythonAsync(test.code, { globals: userNs });
-      results.push({ testName: test.name, passed: true });
     } catch (err: any) {
-      results.push({
-        testName: test.name,
-        passed: false,
-        errorMessage: err?.message ?? String(err),
-      });
+      passed = false;
+      errorMessage = err?.message ?? String(err);
     }
+    const durationMs = Math.round(performance.now() - t0);
+    const testStdout = await snapshotStdout(pyodide);
+    if (testStdout.length > 0) {
+      consoleLines.push({ origin: test.name, text: testStdout });
+    }
+    results.push({
+      testName: test.name,
+      passed,
+      errorMessage,
+      durationMs,
+      stdout: testStdout || undefined,
+    });
   }
 
-  const stdout = (await pyodide.runPythonAsync(`_atlas_stdout.getvalue()`)) as string;
-  const stderr = (await pyodide.runPythonAsync(`_atlas_stderr.getvalue()`)) as string;
-  const combinedStdout = stderr ? `${stdout}\n[stderr]\n${stderr}` : stdout;
+  const plots = await collectPlots(pyodide);
+  const totalMs = Math.round(performance.now() - startTotal);
 
-  post({
-    type: "run-result",
-    id: req.id,
-    results,
-    stdout: combinedStdout,
-    traceback,
-  });
+  // Untagged concatenation for backwards-compat consumers.
+  const stdout = consoleLines
+    .map((l) => (l.origin === "user" ? l.text : `[${l.origin}]\n${l.text}`))
+    .join("");
+
+  return { results, stdout, consoleLines, traceback, totalMs, plots };
+}
+
+async function handleRun(req: RunRequest) {
+  const pyodide = await ensurePyodide();
+  const outcome = await executeRun(
+    pyodide,
+    req.userCode,
+    req.tests,
+    req.pythonPackages,
+  );
+  post({ type: "run-result", id: req.id, ...outcome });
+}
+
+async function handleRunTest(req: RunTestRequest) {
+  const pyodide = await ensurePyodide();
+  const outcome = await executeRun(
+    pyodide,
+    req.userCode,
+    [req.test],
+    req.pythonPackages,
+  );
+  post({ type: "run-result", id: req.id, ...outcome });
 }
 
 self.addEventListener("message", async (event: MessageEvent) => {
@@ -194,7 +343,34 @@ self.addEventListener("message", async (event: MessageEvent) => {
           errorMessage: "Worker error — see traceback panel.",
         })),
         stdout: "",
+        consoleLines: [],
         traceback: err?.message ?? String(err),
+        totalMs: 0,
+        plots: [],
+      });
+    }
+    return;
+  }
+
+  if (data.type === "run-test") {
+    try {
+      await handleRunTest(data as RunTestRequest);
+    } catch (err: any) {
+      post({
+        type: "run-result",
+        id: data.id,
+        results: [
+          {
+            testName: data.test?.name ?? "unknown",
+            passed: false,
+            errorMessage: "Worker error — see traceback panel.",
+          },
+        ],
+        stdout: "",
+        consoleLines: [],
+        traceback: err?.message ?? String(err),
+        totalMs: 0,
+        plots: [],
       });
     }
   }

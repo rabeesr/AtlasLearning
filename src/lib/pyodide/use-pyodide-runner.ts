@@ -6,6 +6,8 @@ import type {
   ChallengeTest,
   ChallengeTestResult,
   ChallengeRunOutcome,
+  ConsoleLine,
+  ChallengePlot,
 } from "@/types/practice";
 
 export type PyodideStatus = "loading" | "ready" | "running" | "error";
@@ -16,8 +18,20 @@ export interface UsePyodideRunner {
   error: string | null;
   lastResults: ChallengeTestResult[] | null;
   stdout: string;
+  consoleLines: ConsoleLine[];
   traceback: string | null;
-  run: (userCode: string, tests: ChallengeTest[], pythonPackages?: string[]) => Promise<ChallengeRunOutcome | null>;
+  totalMs: number | null;
+  plots: ChallengePlot[];
+  run: (
+    userCode: string,
+    tests: ChallengeTest[],
+    pythonPackages?: string[],
+  ) => Promise<ChallengeRunOutcome | null>;
+  runTest: (
+    userCode: string,
+    test: ChallengeTest,
+    pythonPackages?: string[],
+  ) => Promise<ChallengeRunOutcome | null>;
 }
 
 type WorkerOutbound =
@@ -29,7 +43,10 @@ type WorkerOutbound =
       id: number;
       results: ChallengeTestResult[];
       stdout: string;
+      consoleLines?: ConsoleLine[];
       traceback?: string;
+      totalMs?: number;
+      plots?: ChallengePlot[];
     };
 
 export function usePyodideRunner(): UsePyodideRunner {
@@ -44,7 +61,10 @@ export function usePyodideRunner(): UsePyodideRunner {
   const [error, setError] = useState<string | null>(null);
   const [lastResults, setLastResults] = useState<ChallengeTestResult[] | null>(null);
   const [stdout, setStdout] = useState<string>("");
+  const [consoleLines, setConsoleLines] = useState<ConsoleLine[]>([]);
   const [traceback, setTraceback] = useState<string | null>(null);
+  const [totalMs, setTotalMs] = useState<number | null>(null);
+  const [plots, setPlots] = useState<ChallengePlot[]>([]);
 
   useEffect(() => {
     let worker: Worker;
@@ -76,11 +96,17 @@ export function usePyodideRunner(): UsePyodideRunner {
         const outcome: ChallengeRunOutcome = {
           results: data.results,
           stdout: data.stdout,
+          consoleLines: data.consoleLines ?? [],
           traceback: data.traceback,
+          totalMs: data.totalMs,
+          plots: data.plots ?? [],
         };
         setLastResults(data.results);
         setStdout(data.stdout);
+        setConsoleLines(data.consoleLines ?? []);
         setTraceback(data.traceback ?? null);
+        setTotalMs(data.totalMs ?? null);
+        setPlots(data.plots ?? []);
         setStatus("ready");
         if (cb) cb(outcome);
       }
@@ -122,13 +148,38 @@ export function usePyodideRunner(): UsePyodideRunner {
     [],
   );
 
+  const runTest = useCallback<UsePyodideRunner["runTest"]>(
+    async (userCode, test, pythonPackages) => {
+      const worker = workerRef.current;
+      if (!worker) return null;
+      const id = nextIdRef.current++;
+      setStatus("running");
+      setTraceback(null);
+      return new Promise<ChallengeRunOutcome>((resolve) => {
+        pendingRef.current.set(id, resolve);
+        worker.postMessage({
+          type: "run-test",
+          id,
+          userCode,
+          test,
+          pythonPackages,
+        });
+      });
+    },
+    [],
+  );
+
   return {
     status,
     progress,
     error,
     lastResults,
     stdout,
+    consoleLines,
     traceback,
+    totalMs,
+    plots,
     run,
+    runTest,
   };
 }

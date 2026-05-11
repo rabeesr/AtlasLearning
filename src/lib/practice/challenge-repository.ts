@@ -31,6 +31,7 @@ interface RawMeta {
   difficulty: Difficulty;
   estimatedMinutes: number;
   pythonPackages?: string[];
+  hints?: string[];
 }
 
 /**
@@ -58,6 +59,7 @@ function parseMeta(source: string, slug: string): RawMeta {
       difficulty: (meta.difficulty as Difficulty) ?? "intermediate",
       estimatedMinutes: meta.estimatedMinutes ?? 60,
       pythonPackages: meta.pythonPackages,
+      hints: meta.hints,
     };
   } catch (err) {
     throw new Error(
@@ -123,6 +125,7 @@ function composeChallenge(slug: string, files: {
     difficulty: meta.difficulty,
     estimatedMinutes: meta.estimatedMinutes,
     pythonPackages: meta.pythonPackages,
+    hints: meta.hints,
     problemMarkdown: files.problem,
     starterCode: files.starter,
     exampleSolution: files.solution,
