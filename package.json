@@ -7,14 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.3.0",
+    "@monaco-editor/react": "^4.7.0",
     "@supabase/supabase-js": "^2.105.3",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.511.0",
+    "monaco-editor": "^0.55.1",
     "next": "^15.0.0",
+    "pyodide": "^0.29.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",

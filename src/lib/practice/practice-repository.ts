@@ -232,14 +232,72 @@ const quizzes: QuizItem[] = [
 ];
 
 const challenges: ChallengeItem[] = [
+  // ---------- linear-algebra-robotics (Pyodide-runnable) ----------
+  {
+    slug: "matrix-vector-multiply",
+    kind: "challenge",
+    title: "Matrix–Vector Multiply From Scratch",
+    summary:
+      "Build A @ x by hand — the operation every transform, Jacobian, and Kalman update is made of.",
+    topicSlugs: ["linear-algebra-robotics", "matrix-vector-operations"],
+    difficulty: "beginner",
+    estimatedMinutes: 30,
+    language: "Python",
+  },
   {
     slug: "implement-gauss-elimination",
     kind: "challenge",
-    title: "Implement Gaussian Elimination",
-    summary: "Solve Ax=b from scratch with partial pivoting.",
+    title: "Solve Ax = b with Gaussian Elimination",
+    summary:
+      "Build the textbook linear solver — partial pivoting included — and learn exactly when it breaks.",
     topicSlugs: ["linear-systems", "linear-algebra-robotics"],
-    difficulty: "beginner",
+    difficulty: "intermediate",
     estimatedMinutes: 60,
+    language: "Python",
+  },
+  {
+    slug: "power-iteration-eigenvalue",
+    kind: "challenge",
+    title: "Dominant Eigenvalue via Power Iteration",
+    summary:
+      "Find the largest eigenvalue without np.linalg.eig — the workhorse behind PCA, PageRank, and stability analysis.",
+    topicSlugs: ["linear-algebra-robotics", "eigenvalues-eigenvectors"],
+    difficulty: "advanced",
+    estimatedMinutes: 75,
+    language: "Python",
+  },
+  // ---------- calculus-robotics (Pyodide-runnable) ----------
+  {
+    slug: "numerical-derivative",
+    kind: "challenge",
+    title: "Numerical Derivatives via Central Differences",
+    summary:
+      "Estimate f'(x) the way every real-robot gradient gets computed — no symbolic math.",
+    topicSlugs: ["calculus-robotics", "limits-integration"],
+    difficulty: "beginner",
+    estimatedMinutes: 25,
+    language: "Python",
+  },
+  {
+    slug: "simpson-integration",
+    kind: "challenge",
+    title: "Simpson's Rule Integration",
+    summary:
+      "Build a quadrature routine you can trust — exact on cubics, 4× better than the trapezoidal rule.",
+    topicSlugs: ["calculus-robotics", "limits-integration"],
+    difficulty: "intermediate",
+    estimatedMinutes: 45,
+    language: "Python",
+  },
+  {
+    slug: "rk4-ode-solver",
+    kind: "challenge",
+    title: "Solve an ODE with RK4",
+    summary:
+      "Implement the fourth-order Runge–Kutta integrator — the fixed-step workhorse behind every dynamics simulator.",
+    topicSlugs: ["calculus-robotics", "ordinary-differential-equations"],
+    difficulty: "advanced",
+    estimatedMinutes: 75,
     language: "Python",
   },
   {

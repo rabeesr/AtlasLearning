@@ -1,9 +1,12 @@
 import { SignInButton, SignOutButton } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-import { Card, SectionHeader } from "@/components/shared/ui";
+import { Badge, Card, SectionHeader } from "@/components/shared/ui";
 import { getCurrentUser, isSignedInRequest } from "@/lib/auth/current-user";
 import { getCurriculumData } from "@/lib/content/curriculum";
+import { TRACKED_TOPIC_SLUGS } from "@/lib/progress/tracked-topics";
+import { sendTestReviewEmailForUser } from "@/lib/reviews/review-service";
 import {
   defaultPreferences,
   loadPreferences,
@@ -11,17 +14,26 @@ import {
   type RepetitionCadence,
 } from "@/lib/user/preferences";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const [user, signedIn, curriculum] = await Promise.all([
     getCurrentUser(),
     isSignedInRequest(),
     getCurriculumData(),
   ]);
+  const params = (await searchParams) ?? {};
   const prefs =
     (await loadPreferences(user.id, { email: user.email, timezone: user.timezone })) ??
     defaultPreferences;
   const timezoneOptions =
     typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [user.timezone];
+
+  const reviewTestStatus = typeof params.review_test === "string" ? params.review_test : null;
+  const reviewTestTopic = typeof params.review_topic === "string" ? params.review_topic : null;
+  const reviewTestReason = typeof params.review_reason === "string" ? params.review_reason : null;
 
   async function updatePreferencesAction(formData: FormData) {
     "use server";
@@ -55,6 +67,29 @@ export default async function SettingsPage() {
     };
     await savePreferences(user.id, next);
     revalidatePath("/settings");
+
+    const submitIntent = String(formData.get("submit_intent") ?? "save");
+    if (submitIntent === "send-test") {
+      const allowedTopics =
+        next.spacedRepetition.optInTopics === "all"
+          ? Array.from(TRACKED_TOPIC_SLUGS)
+          : next.spacedRepetition.optInTopics.filter((topicSlug) =>
+              TRACKED_TOPIC_SLUGS.has(topicSlug),
+            );
+
+      try {
+        const result = await sendTestReviewEmailForUser({
+          userId: user.id,
+          emailAddress: next.review.emailAddress || user.email || "",
+          allowedTopics,
+        });
+        redirect(`/settings?review_test=sent&review_topic=${encodeURIComponent(result.topicSlug)}`);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unable to send the review test email.";
+        redirect(`/settings?review_test=failed&review_reason=${encodeURIComponent(message)}`);
+      }
+    }
   }
 
   const topLevelTopics = curriculum.topics.filter((t) => t.parentSlug === null);
@@ -75,6 +110,22 @@ export default async function SettingsPage() {
             : `Sign in to persist your progress, quiz attempts, and learning checklists across devices.`
         }
       />
+
+      {signedIn && reviewTestStatus ? (
+        <Card className="flex flex-col gap-2 border border-[var(--border)] bg-[var(--panel-muted)]">
+          <div className="flex items-center gap-2">
+            <Badge tone={reviewTestStatus === "sent" ? "success" : "warning"}>
+              {reviewTestStatus === "sent" ? "Test email sent" : "Test email failed"}
+            </Badge>
+            {reviewTestTopic ? <span className="text-sm text-[var(--text-muted)]">{reviewTestTopic}</span> : null}
+          </div>
+          <p className="text-sm text-[var(--text-muted)]">
+            {reviewTestStatus === "sent"
+              ? "Check the destination inbox, reply to the message, and then verify that the answer is recorded in Atlas."
+              : reviewTestReason ?? "The test review email could not be sent."}
+          </p>
+        </Card>
+      ) : null}
 
       <Card>
         <h2 className="text-lg font-semibold text-[var(--text)]">Profile</h2>
@@ -131,15 +182,25 @@ export default async function SettingsPage() {
               />
               <span>Enable daily review emails</span>
             </Label>
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px]">
               <Field label="Destination email">
-                <input
-                  type="email"
-                  name="review_email"
-                  placeholder="you@example.com"
-                  defaultValue={prefs.review.emailAddress}
-                  className={inputClass}
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    name="review_email"
+                    placeholder="you@example.com"
+                    defaultValue={prefs.review.emailAddress}
+                    className={inputClass}
+                  />
+                  <button
+                    type="submit"
+                    name="submit_intent"
+                    value="send-test"
+                    className="shrink-0 rounded-md border border-[var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold text-[var(--text)] transition hover:bg-[var(--tile)]"
+                  >
+                    Send test
+                  </button>
+                </div>
               </Field>
               <Field label="Preferred send time">
                 <input
@@ -301,6 +362,8 @@ export default async function SettingsPage() {
         <div className="flex justify-end">
           <button
             type="submit"
+            name="submit_intent"
+            value="save"
             className="rounded-md border border-[var(--accent)] bg-[var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[var(--accent)] transition hover:bg-[color-mix(in_srgb,var(--accent)_22%,transparent)]"
           >
             Save preferences

@@ -228,6 +228,51 @@ async function chooseTopicForUser(userId: string, row: ReviewPreferencesRow) {
   };
 }
 
+async function chooseTopicForUserWithAllowedTopics(userId: string, allowedTopics: string[]) {
+  const filteredAllowedTopics = allowedTopics.filter((topicSlug) => TRACKED_TOPIC_SLUGS.has(topicSlug));
+  if (filteredAllowedTopics.length === 0) return null;
+
+  const [progressRows, reviewState, curriculum] = await Promise.all([
+    loadReviewProgress(userId),
+    loadReviewState(userId),
+    getCurriculumData(),
+  ]);
+
+  const topicNameBySlug = new Map(curriculum.topics.map((topic) => [topic.slug, topic.name]));
+  const filteredProgress = progressRows.filter((row) => filteredAllowedTopics.includes(row.topicSlug));
+  const dueTopics = filteredProgress
+    .map((progress) => ({
+      progress,
+      state: reviewState.get(progress.topicSlug),
+    }))
+    .filter(({ state }) => state?.next_review_at && new Date(state.next_review_at) <= new Date())
+    .sort((a, b) => {
+      const aAt = a.state?.next_review_at ? new Date(a.state.next_review_at).getTime() : 0;
+      const bAt = b.state?.next_review_at ? new Date(b.state.next_review_at).getTime() : 0;
+      return aAt - bAt;
+    });
+
+  if (dueTopics.length > 0) {
+    const topic = dueTopics[0].progress.topicSlug;
+    return { topicSlug: topic, topicTitle: topicNameBySlug.get(topic) ?? topic };
+  }
+
+  const inProgress = filteredProgress
+    .filter((progress) => progress.status === "in_progress")
+    .sort((a, b) => a.proficiencyScore - b.proficiencyScore);
+  if (inProgress.length > 0) {
+    return {
+      topicSlug: inProgress[0].topicSlug,
+      topicTitle: topicNameBySlug.get(inProgress[0].topicSlug) ?? inProgress[0].topicSlug,
+    };
+  }
+
+  const fallbackTopic = filteredAllowedTopics[0];
+  return fallbackTopic
+    ? { topicSlug: fallbackTopic, topicTitle: topicNameBySlug.get(fallbackTopic) ?? fallbackTopic }
+    : null;
+}
+
 async function chooseQuestion(userId: string, topicSlug: string) {
   const supabase = getReviewAdminRpcClient();
   const quiz = await getQuizForTopic(topicSlug);
@@ -387,6 +432,65 @@ export async function sendDueReviewEmails(now = new Date()) {
   }
 
   return { sentCount: sent.length, sent };
+}
+
+export async function sendTestReviewEmailForUser(input: {
+  userId: string;
+  emailAddress: string;
+  allowedTopics: string[];
+}) {
+  if (!resendFromEmail) throw new Error("Missing RESEND_FROM_EMAIL");
+  if (!input.emailAddress) throw new Error("Add a destination email before sending a test.");
+
+  const topic = await chooseTopicForUserWithAllowedTopics(input.userId, input.allowedTopics);
+  if (!topic) {
+    throw new Error("No tracked topic is available in the selected topic list.");
+  }
+
+  const question = await chooseQuestion(input.userId, topic.topicSlug);
+  if (!question) {
+    throw new Error("No authored quiz questions are available for the selected test topic.");
+  }
+
+  const resend = getResendClient();
+  const promptId = crypto.randomUUID();
+  const sentAt = new Date().toISOString();
+  const replyAddress = buildReplyAddress(promptId);
+  const email = formatPromptEmail(topic.topicTitle, question, topic.topicSlug);
+  const response = await resend.emails.send({
+    from: resendFromEmail,
+    to: input.emailAddress,
+    subject: `[Test] ${email.subject}`,
+    html: email.html,
+    text: email.text,
+    replyTo: replyAddress,
+    tags: [
+      { name: "prompt_id", value: promptId },
+      { name: "topic_slug", value: topic.topicSlug },
+      { name: "mode", value: "test" },
+    ],
+  });
+
+  if (response.error) {
+    throw new Error(response.error.message ?? "Failed to send test review email.");
+  }
+
+  await insertReviewPrompt({
+    id: promptId,
+    userId: input.userId,
+    topicSlug: topic.topicSlug,
+    question,
+    replyAddress,
+    providerMessageId: response.data?.id ?? null,
+    sentAt,
+  });
+  await markPrompted(input.userId, topic.topicSlug, sentAt);
+
+  return {
+    promptId,
+    topicSlug: topic.topicSlug,
+    questionId: question.id,
+  };
 }
 
 async function loadPrompt(promptId: string) {
