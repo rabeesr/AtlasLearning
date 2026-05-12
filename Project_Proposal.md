@@ -71,6 +71,66 @@ Me — a software engineer with a strong CS and engineering foundation (Python, 
 - Deployment: Vercel
 - MCP Servers: Potential custom MCP server for topic-specific document referencing (stretch goal)
 
+## Next Deployment — Retention & Tutoring Milestone
+
+Targeted as the next deployment after the current Retention & Active-Learning milestone (mastery levels, mixed review, flashcards, probes, reflection, 2D animation). All five items are detailed enough to pick up cold; do not start implementation until kicked off.
+
+### 1. AI tutor on every challenge (Claude API)
+
+A Socratic tutor wired into the existing challenge runner. On "I'm stuck" or after a failing run, send `{problem, user_code, failing_test, last_traceback, prior_hints_revealed}` to Claude and stream a *targeted question* back — never the answer. Goal: replace "google + StackOverflow" with a tutor that points at the misconception.
+
+- **Files**: new `src/lib/ai/tutor-service.ts` (server-side Claude client; reuse `claude-api` skill), new API route `src/app/api/tutor/route.ts` that streams via Server-Sent Events, new `src/components/practice/tutor-panel.tsx` mounted inside `challenge-runner.tsx` (collapsible right rail).
+- **Prompt design**: system prompt is the problem, expected solution shape, and the "Socratic, never give the answer" rule. **Cache the system + problem block** so only the user's code/traceback varies per call (most tokens stay cached → fast and cheap).
+- **Persistence**: store each exchange in a new `tutor_exchanges` table (user_id, challenge_slug, attempt_id, role, content_md, created_at) — RLS own-only. Use it later for "mistake-pattern" analytics.
+- **Guardrails**: per-user daily token budget enforced server-side (env var), surface remaining budget in the UI. Refuse if the problem isn't in the registered challenge set (prevents prompt-injection via crafted slug).
+- **Verification**: dev-mode toggle to use a fixture instead of the real API. Manual walkthrough: write a deliberately wrong RK4, observe the tutor asking "what does k2 depend on?" rather than rewriting the loop.
+
+### 2. Interactive robot playground
+
+Free-form `step(state) → control` page where the user writes a closed-loop policy and the page runs a sim with live sliders for target, disturbance, sensor noise. Three preset rigs: cart-pole, 2-link planar arm reaching a target, diff-drive following a waypoint trajectory.
+
+- **Route**: `/playground/[rigSlug]` with the three rigs as static metadata in `src/data/playgrounds/<slug>.ts`.
+- **Reuse**: Pyodide worker + Monaco from `challenge-runner.tsx`; extract a thin `<PolicyEditor />` from the runner so playground doesn't drag in test results UI.
+- **Sim loop**: lives on the worker (`src/lib/pyodide/playground-loop.ts`) — calls user's `step(state)` at fixed dt, feeds `state` to `robotics_sim.animate_*` and streams frames over time, not all-at-once. Adds a new message type `step-tick` to the worker protocol.
+- **Sliders**: implemented as React state above the editor; values are read every tick by writing to a known Python dict (`atlas_params`) before each `step()` call.
+- **Verification**: cart-pole with the textbook LQR gains stabilizes within ~3 s; intentional bad gains let it fall; noise slider visibly perturbs the trajectory.
+
+### 3. Worked-example pairs with fading (Sweller / cognitive load)
+
+For each existing challenge, ship a *fully-worked twin* with simpler numbers — same algorithm, structurally identical. The user reads the worked version first, then attempts the real challenge with a fading number of pre-filled steps. Strong evidence base in cognitive-load theory for novices.
+
+- **Content shape**: add `src/data/challenges/<slug>/worked-example.py` (annotated solution against the twin numbers) and `worked-example.md` (one-paragraph framing + the twin's setup). The skill `generate-coding-challenge` is updated to require both for new challenges; existing 7 challenges get retrofitted.
+- **UI**: new tab "Worked example" before the editor opens. After the user clicks "I've read it," the editor opens with the first N lines of `solution.py` pre-filled (faded grey, deletable). Each subsequent attempt fades fewer lines. Persisted to `challenge_attempts.fade_level int`.
+- **Migration**: `0008_worked_examples.sql` adds `fade_level` to `challenge_attempts`.
+- **Files**: `src/components/practice/worked-example-pane.tsx`, edits to `challenge-runner.tsx` and `meta.ts` (add `workedExampleMarkdown`, `workedExamplePython` fields).
+- **Verification**: open `power-iteration-eigenvalue`, complete the worked example, confirm the editor opens with the iteration loop pre-faded and fading lessens on the second attempt.
+
+### 4. FSRS scheduling for flashcards and topics
+
+Swap the current SM-2-lite scheduler (fixed multipliers in `src/lib/reviews/flashcard-scheduler.ts`) for FSRS — Anki's default since 2024, with per-item difficulty/stability/retrievability parameters. Apply the same scheduler to topic-level reviews (replacing the 1–30 day fixed interval in `topic_review_state`).
+
+- **Files**: rewrite `src/lib/reviews/flashcard-scheduler.ts` as `fsrs-scheduler.ts` exporting `schedule({ rating, prevStability, prevDifficulty, elapsedDays }) → { stability, difficulty, intervalDays }`. Use the published FSRS-4.5 weights as constants; do not roll our own optimization in this pass.
+- **Migrations**: `0009_fsrs.sql` adds `stability real`, `difficulty real`, `lapses int default 0` to both `flashcard_reviews` and `topic_review_state`. Backfill from existing `interval_days` using `stability = max(1, interval_days)` and `difficulty = 5.0`.
+- **Topic integration**: `src/lib/reviews/review-service.ts` reads the FSRS state and computes `next_review_at`. The email-sending cron stays unchanged; only the scheduler swaps.
+- **Verification**: review a card 10 times with mixed ratings; confirm intervals grow super-linearly on Good/Easy and reset to ~1 day on Again. SQL spot-check that `lapses` increments on Again only.
+
+### 5. In-app review queue + lapse pinpointing
+
+Move the spaced-repetition surface in-app. Today the system emails users. Add a unified "Due today" panel on the dashboard with a single CTA. When a topic decays, identify *which* sub-concept lapsed by joining `question_attempts` and target review there, not the whole topic.
+
+- **Files**: new `src/components/dashboard/due-today-card.tsx` (server component) showing flashcards due + quiz items due + decaying topics. New `src/lib/reviews/due-today.ts` aggregates from `flashcard_reviews`, `topic_review_state`, and `question_attempts` in one call.
+- **Lapse pinpointing**: when a topic is `decaying`, query `question_attempts` joined on `quiz_attempts` for the last `result ∈ ('incorrect', 'partial')` per `question_id`; surface those exact questions in the review queue instead of "review this topic." Helper: `findLapsedConcepts(userId, topicSlug)`.
+- **CTA**: "Start review" button launches a session combining due flashcards (up to 10), lapsed quiz items (up to 5), and at most one challenge from a decaying topic. Reuses `mixed-session-runner.tsx` with a new `mode: 'due-today'`.
+- **Verification**: seed a user with one decayed topic and three due flashcards; confirm the panel shows correct counts; complete the session and verify both `flashcard_reviews` and `topic_review_state` advance.
+
+### Cross-cutting infra for the milestone
+
+- **Migrations** `0008` (worked examples) and `0009` (FSRS) only — apply via Supabase MCP after content is ready, never before.
+- **No new visual primitives** — every new component reuses `Card / Button / Badge / SectionHeader` and follows the Apple aesthetic in `~/.claude/projects/-Users-Rabees-Development-DesignBuildShip-AtlasLearning/memory/feedback_visual_design.md`.
+- **Cost ceiling**: AI tutor (#1) is the only feature that costs money. Set a project-level monthly cap before turning on.
+
+---
+
 ## Stretch Goals
 
 **V1 Stretch:**

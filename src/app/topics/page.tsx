@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge, Card, ProgressBar, SectionHeader } from "@/components/shared/ui";
+import { listFlashcardsForTopic } from "@/lib/content/flashcard-content";
 import { STATUS_LABEL, STATUS_TONE } from "@/lib/learner/status";
 import { getLearnerDashboardView } from "@/lib/learner/learner-data";
 
@@ -91,6 +92,14 @@ export default async function TopicsIndexPage() {
                               <Badge key={s}>{s}</Badge>
                             ))}
                           </div>
+                          {listFlashcardsForTopic(topic.slug).length > 0 ? (
+                            <Link
+                              href={`/review/flashcards?topic=${topic.slug}`}
+                              className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[var(--tile-deep)] px-3 py-1 text-[12px] font-medium text-[var(--accent)] transition hover:bg-[var(--accent)] hover:text-white"
+                            >
+                              Review {listFlashcardsForTopic(topic.slug).length} flashcards →
+                            </Link>
+                          ) : null}
                         </Card>
                       );
                     })}

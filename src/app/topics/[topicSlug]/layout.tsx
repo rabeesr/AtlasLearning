@@ -11,6 +11,7 @@ import { getQuizForTopic } from "@/lib/content/quiz-content";
 import { getTopicContent } from "@/lib/content/topic-content";
 import { getLearnerDashboardView } from "@/lib/learner/learner-data";
 import { listByTopic } from "@/lib/practice/practice-repository";
+import { listFlashcardsForTopic } from "@/lib/content/flashcard-content";
 import { isTrackedTopic } from "@/lib/progress/tracked-topics";
 import type { TopicSurface } from "@/types/domain";
 
@@ -45,6 +46,7 @@ export default async function TopicLayout({
     declared.has("challenges") || listByTopic(topicSlug, "challenge").length > 0;
   const hasProject = declared.has("projects") || listByTopic(topicSlug, "project").length > 0;
   const hasLearn = declared.has("learn") || true;
+  const hasFlashcards = listFlashcardsForTopic(topicSlug).length > 0;
 
   const tone =
     summary.status === "strong"
@@ -124,6 +126,7 @@ export default async function TopicLayout({
         hasQuiz={hasQuiz}
         hasChallenge={hasChallenge}
         hasProject={hasProject}
+        hasFlashcards={hasFlashcards}
       />
 
       <div>{children}</div>

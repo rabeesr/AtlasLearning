@@ -10,12 +10,14 @@ export function TopicTabs({
   hasQuiz,
   hasChallenge,
   hasProject,
+  hasFlashcards,
 }: {
   topicSlug: string;
   hasLearn: boolean;
   hasQuiz: boolean;
   hasChallenge: boolean;
   hasProject: boolean;
+  hasFlashcards?: boolean;
 }) {
   const pathname = usePathname() ?? "";
   const base = `/topics/${topicSlug}`;
@@ -23,6 +25,7 @@ export function TopicTabs({
   const tabs: Array<{ href: string; label: string; show: boolean }> = [
     { href: base, label: "Overview", show: true },
     { href: `${base}/learn`, label: "Learn", show: hasLearn },
+    { href: `${base}/flashcards`, label: "Flashcards", show: !!hasFlashcards },
     { href: `${base}/quizzes`, label: "Quizzes", show: hasQuiz },
     { href: `${base}/challenges`, label: "Coding Challenges", show: hasChallenge },
     { href: `${base}/projects`, label: "Projects", show: hasProject },

@@ -27,7 +27,14 @@ from __future__ import annotations
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+import matplotlib.animation as _mpl_anim
+
+# NOTE: we resolve `FuncAnimation` at call time (not import time) so the
+# AtlasLearning Pyodide worker's tracked-animation subclass — installed
+# via `matplotlib.animation.FuncAnimation = _AtlasTrackedFuncAnimation`
+# in setupRunEnv — is the one we instantiate. A top-level
+# `from matplotlib.animation import FuncAnimation` would bind the
+# original class at module import (init time) and bypass tracking.
 
 
 def _interval_from_dt(dt: float) -> int:
@@ -80,8 +87,11 @@ def animate_pendulum(theta_history, dt, length: float = 1.0):
         bob.set_data([x], [y])
         return rod, bob
 
+    # Draw frame 0 immediately so the figure is non-empty even before the
+    # animation runs (matters for static-fallback captures).
+    update(0)
     interval = _interval_from_dt(dt)
-    return FuncAnimation(fig, update, frames=n, interval=interval, blit=False)
+    return _mpl_anim.FuncAnimation(fig, update, frames=n, interval=interval, blit=False)
 
 
 def animate_trajectory_2d(positions, fps: int = 30):
@@ -120,8 +130,9 @@ def animate_trajectory_2d(positions, fps: int = 30):
         head.set_data([pos[i, 0]], [pos[i, 1]])
         return trail, head
 
+    update(0)
     interval = max(16, int(round(1000.0 / float(max(1, fps)))))
-    return FuncAnimation(fig, update, frames=n, interval=interval, blit=False)
+    return _mpl_anim.FuncAnimation(fig, update, frames=n, interval=interval, blit=False)
 
 
 def animate_arm_2d(joint_angles_history, link_lengths):
@@ -176,4 +187,5 @@ def animate_arm_2d(joint_angles_history, link_lengths):
         ee.set_data([xs[-1]], [ys[-1]])
         return arm, ee
 
-    return FuncAnimation(fig, update, frames=n, interval=50, blit=False)
+    update(0)
+    return _mpl_anim.FuncAnimation(fig, update, frames=n, interval=50, blit=False)

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CalibrationBadge } from "@/components/dashboard/calibration-badge";
+import { FlashcardsReviewCard } from "@/components/dashboard/flashcards-review-card";
 import { MixedReviewCard } from "@/components/dashboard/mixed-review-card";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
 import { TopicProficiencyGrid } from "@/components/dashboard/topic-proficiency-grid";
@@ -25,7 +26,10 @@ export default async function DashboardPage() {
         action={<CalibrationBadge />}
       />
 
-      <MixedReviewCard />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <MixedReviewCard />
+        <FlashcardsReviewCard />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat

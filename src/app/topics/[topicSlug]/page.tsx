@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 
 import { Card } from "@/components/shared/ui";
 import { getCurriculumData } from "@/lib/content/curriculum";
+import { listFlashcardsForTopic } from "@/lib/content/flashcard-content";
 import { getSubtopicLearnHref } from "@/lib/content/topic-learn-sections";
 import { getLearnerDashboardView } from "@/lib/learner/learner-data";
 import { listByTopic } from "@/lib/practice/practice-repository";
@@ -28,6 +29,7 @@ export default async function TopicOverviewPage({
   const quizzes = listByTopic(topicSlug, "quiz");
   const challenges = listByTopic(topicSlug, "challenge");
   const projects = listByTopic(topicSlug, "project");
+  const flashcards = listFlashcardsForTopic(topicSlug);
 
   const prereqs = summary.topic.dependencySlugs
     .map((slug) => curriculum.topics.find((t) => t.slug === slug))
@@ -64,7 +66,14 @@ export default async function TopicOverviewPage({
 
         <Card>
           <h2 className="text-lg font-semibold text-[var(--text)]">Practice at a glance</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Link
+              href={`/topics/${topicSlug}/flashcards`}
+              className="rounded-md border border-[var(--border)] p-3 transition hover:border-[var(--border-strong)]"
+            >
+              <p className="text-2xl font-semibold text-[var(--text)]">{flashcards.length}</p>
+              <p className="text-xs uppercase tracking-wider text-[var(--text-muted)]">Flashcards</p>
+            </Link>
             <Link
               href={`/topics/${topicSlug}/quizzes`}
               className="rounded-md border border-[var(--border)] p-3 transition hover:border-[var(--border-strong)]"

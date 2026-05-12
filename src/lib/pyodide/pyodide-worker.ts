@@ -327,6 +327,13 @@ try:
             "frames": png_frames,
             "truncated": truncated,
         })
+        # Close the figure so the static-plot capture path doesn't grab it
+        # again as a (last-frame or empty) PLOT entry on top of the animation.
+        try:
+            import matplotlib.pyplot as _plt
+            _plt.close(fig)
+        except Exception:
+            pass
     _atlas_tracked_anims.clear()
 except Exception:
     pass

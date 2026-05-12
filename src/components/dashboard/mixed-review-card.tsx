@@ -1,4 +1,4 @@
-import { Badge, Button, Card } from "@/components/shared/ui";
+import { Button, Card } from "@/components/shared/ui";
 import { previewSessionCounts } from "@/lib/reviews/mixed-session";
 
 /**
@@ -22,7 +22,6 @@ export async function MixedReviewCard() {
             Mixed review
           </h3>
         </div>
-        <Badge tone="accent">Khan-style</Badge>
       </div>
       <p className="text-[15px] leading-6 text-[var(--ink-muted)]">
         Interleaved quizzes and coding challenges. Refresh keeps your proficient topics sharp; Mixed practice ranges across every non-locked topic.
@@ -38,8 +37,9 @@ export async function MixedReviewCard() {
           </p>
           <Button
             href={`/review/mixed?mode=refresh&n=${refreshN}`}
-            variant={counts.refresh.totalItemsAvailable > 0 ? "primary" : "secondary"}
+            variant={counts.refresh.totalItemsAvailable > 0 ? "accent" : "secondary"}
             size="sm"
+            className="w-full"
           >
             Start Refresh
           </Button>
@@ -54,8 +54,9 @@ export async function MixedReviewCard() {
           </p>
           <Button
             href={`/review/mixed?mode=mixed&n=${mixedN}`}
-            variant={counts.mixed.totalItemsAvailable > 0 ? "primary" : "secondary"}
+            variant={counts.mixed.totalItemsAvailable > 0 ? "accent" : "secondary"}
             size="sm"
+            className="w-full"
           >
             Start Mixed
           </Button>
