@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { Badge, Button, Card } from "@/components/shared/ui";
+import { useReflection } from "@/components/learn/reflection-context";
 import { useQuizTracker } from "@/lib/practice/quiz-tracker";
 import type {
+  Confidence,
   MultipleChoiceQuestion,
   Quiz,
   QuestionAttempt,
@@ -14,20 +16,78 @@ import type {
 
 type Phase = "answering" | "revealed";
 
+// ALPHA 1.3 — confidence picker presented before reveal/submit.
+const CONFIDENCE_OPTIONS: { value: Confidence; label: string }[] = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
+
+function ConfidencePicker({
+  value,
+  onChange,
+}: {
+  value: Confidence | null;
+  onChange: (next: Confidence) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-[var(--tile)] p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--ink-muted)]">
+        How confident are you?
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {CONFIDENCE_OPTIONS.map((opt) => {
+          const isActive = value === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange(opt.value)}
+              className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-[#0066CC] text-white"
+                  : "bg-white text-[var(--ink-muted)] hover:bg-[var(--tile-deep)]"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 const SELF_GRADE_OPTIONS: { value: QuestionResult; label: string; tone: string }[] = [
   { value: "correct", label: "I got it right", tone: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" },
   { value: "partial", label: "Partial / close", tone: "bg-amber-50 text-amber-700 hover:bg-amber-100" },
   { value: "incorrect", label: "I got it wrong", tone: "bg-rose-50 text-rose-700 hover:bg-rose-100" },
 ];
 
-export function QuizPlayer({ quiz, topicTitle }: { quiz: Quiz; topicTitle: string }) {
+export function QuizPlayer({
+  quiz,
+  topicTitle,
+  // ALPHA 1.2 — when embedded inside a mixed session, the runner manages
+  // navigation. We hide the summary screen and call `onSessionItemComplete`
+  // once per question with its result.
+  mode = "standalone",
+  onSessionItemComplete,
+}: {
+  quiz: Quiz;
+  topicTitle: string;
+  mode?: "standalone" | "session";
+  onSessionItemComplete?: (result: QuestionResult) => void;
+}) {
   const tracker = useQuizTracker();
+  const { trigger: triggerReflection } = useReflection();
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("answering");
   const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
   const [perQuestion, setPerQuestion] = useState<Record<string, QuestionAttempt>>({});
   const [done, setDone] = useState(false);
+  // ALPHA 1.3 — confidence is required before reveal/submit.
+  const [confidence, setConfidence] = useState<Confidence | null>(null);
 
   useEffect(() => {
     setAttemptId(tracker.startAttempt(quiz.topicSlug));
@@ -44,6 +104,8 @@ export function QuizPlayer({ quiz, topicTitle }: { quiz: Quiz; topicTitle: strin
       questionId: question.id,
       result,
       selectedChoice: choice,
+      // ALPHA 1.3 — persisted alongside the result.
+      confidence: confidence ?? undefined,
     };
     setPerQuestion((prev) => ({ ...prev, [question.id]: attempt }));
     tracker.recordQuestion(attemptId, attempt);
@@ -51,44 +113,70 @@ export function QuizPlayer({ quiz, topicTitle }: { quiz: Quiz; topicTitle: strin
 
   const submitMultipleChoice = () => {
     if (!question || question.type !== "multiple_choice" || selectedChoice === null) return;
+    if (!confidence) return; // ALPHA 1.3 — required before submit.
     const correct = selectedChoice === question.answer;
-    recordResult(correct ? "correct" : "incorrect", selectedChoice);
+    const result: QuestionResult = correct ? "correct" : "incorrect";
+    recordResult(result, selectedChoice);
     setPhase("revealed");
+    if (mode === "session" && onSessionItemComplete) {
+      onSessionItemComplete(result);
+    }
   };
 
   const submitSelfGrade = (grade: QuestionResult) => {
     if (!attemptId || !question) return;
-    const attempt: QuestionAttempt = { questionId: question.id, result: grade };
+    const attempt: QuestionAttempt = {
+      questionId: question.id,
+      result: grade,
+      confidence: confidence ?? undefined,
+    };
     const nextPerQuestion = { ...perQuestion, [question.id]: attempt };
     setPerQuestion(nextPerQuestion);
     tracker.recordQuestion(attemptId, attempt);
+    if (mode === "session" && onSessionItemComplete) {
+      onSessionItemComplete(grade);
+      return;
+    }
 
     if (index + 1 >= total) {
       tracker.completeAttempt(attemptId);
       setDone(true);
+      triggerReflection({ kind: "quiz", topicSlug: quiz.topicSlug });
       return;
     }
     setIndex((i) => i + 1);
     setPhase("answering");
     setSelectedChoice(null);
+    setConfidence(null);
   };
 
   const reveal = () => {
     if (!question) return;
+    if (!confidence) return; // ALPHA 1.3 — required before reveal.
     if (!perQuestion[question.id]) recordResult("skipped");
     setPhase("revealed");
   };
 
   const next = () => {
     if (!attemptId) return;
+    if (mode === "session" && onSessionItemComplete) {
+      // For multiple-choice: result was already reported on submit. For
+      // self-graded MC there's no path here (handled in submitSelfGrade).
+      // For free-form, "Next" without grading signals incorrect.
+      const recorded = perQuestion[question?.id ?? ""];
+      onSessionItemComplete(recorded?.result ?? "skipped");
+      return;
+    }
     if (index + 1 >= total) {
       tracker.completeAttempt(attemptId);
       setDone(true);
+      triggerReflection({ kind: "quiz", topicSlug: quiz.topicSlug });
       return;
     }
     setIndex((i) => i + 1);
     setPhase("answering");
     setSelectedChoice(null);
+    setConfidence(null);
   };
 
   const restart = () => {
@@ -145,15 +233,21 @@ export function QuizPlayer({ quiz, topicTitle }: { quiz: Quiz; topicTitle: strin
           <FreeFormBody question={question} phase={phase} />
         )}
 
+        {/* ALPHA 1.3 — confidence picker, required before reveal/submit. */}
+        {phase === "answering" ? (
+          <ConfidencePicker value={confidence} onChange={setConfidence} />
+        ) : null}
+
         <Controls
           phase={phase}
           questionType={question.type}
-          canSubmit={selectedChoice !== null}
+          canSubmit={selectedChoice !== null && confidence !== null}
+          canReveal={confidence !== null}
           onSubmitMC={submitMultipleChoice}
           onReveal={reveal}
           onSelfGrade={submitSelfGrade}
           onNext={next}
-          isLast={index + 1 === total}
+          isLast={mode === "session" ? true : index + 1 === total}
         />
       </Card>
     </div>
@@ -288,6 +382,7 @@ function Controls({
   phase,
   questionType,
   canSubmit,
+  canReveal,
   onSubmitMC,
   onReveal,
   onSelfGrade,
@@ -297,6 +392,7 @@ function Controls({
   phase: Phase;
   questionType: QuizQuestion["type"];
   canSubmit: boolean;
+  canReveal: boolean;
   onSubmitMC: () => void;
   onReveal: () => void;
   onSelfGrade: (g: QuestionResult) => void;
@@ -315,7 +411,12 @@ function Controls({
     }
     return (
       <div className="flex justify-end">
-        <Button onClick={onReveal}>Show answer</Button>
+        <Button
+          onClick={onReveal}
+          variant={canReveal ? "primary" : "secondary"}
+        >
+          Show answer
+        </Button>
       </div>
     );
   }

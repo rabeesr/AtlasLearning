@@ -1,7 +1,13 @@
 import Link from "next/link";
 
 import { Badge, Card, ProgressBar } from "@/components/shared/ui";
+import { MasteryPill } from "@/components/dashboard/mastery-pill";
+import { levelFromScore, type MasteryLevel } from "@/lib/progress/proficiency-calculator";
 import type { PhaseProgress } from "@/types/learner";
+
+function phaseMasteryLevel(avg: number): MasteryLevel {
+  return levelFromScore(avg, "active");
+}
 
 export function PhaseProgressCard({ progress }: { progress: PhaseProgress }) {
   const { phase, topicCount, completedCount, decayingCount, blockedCount, averageProficiency } =
@@ -30,7 +36,8 @@ export function PhaseProgressCard({ progress }: { progress: PhaseProgress }) {
         </div>
       </div>
       <ProgressBar value={averageProficiency} tone={tone} />
-      <div className="flex flex-wrap gap-2 text-[14px] text-[var(--text-muted)]">
+      <div className="flex flex-wrap items-center gap-2 text-[14px] text-[var(--text-muted)]">
+        <MasteryPill level={phaseMasteryLevel(averageProficiency)} />
         <Badge>
           {completedCount}/{topicCount} strong
         </Badge>

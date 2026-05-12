@@ -301,6 +301,21 @@ const challenges: ChallengeItem[] = [
     language: "Python",
   },
   {
+    slug: "two-link-arm-trajectory",
+    kind: "challenge",
+    title: "Drive a Two-Link Arm Along a Velocity Profile",
+    summary:
+      "Integrate a joint-velocity profile and apply forward kinematics to drive a planar 2-link arm — calculus and kinematics together, with an animated arm in the reveal.",
+    topicSlugs: [
+      "calculus-robotics",
+      "linear-algebra-robotics",
+      "limits-integration",
+    ],
+    difficulty: "intermediate",
+    estimatedMinutes: 60,
+    language: "Python",
+  },
+  {
     slug: "least-squares-fit",
     kind: "challenge",
     title: "Least Squares Line Fit",

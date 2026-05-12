@@ -4,6 +4,9 @@ export type QuizQuestionType = "multiple_choice" | "short_answer" | "code";
 
 export type QuestionResult = "correct" | "partial" | "incorrect" | "skipped";
 
+// --- ALPHA: 1.3 confidence rating ---------------------------------------
+export type Confidence = "low" | "medium" | "high";
+
 interface QuizQuestionBase {
   id: string;
   prompt: string;
@@ -34,6 +37,8 @@ export interface QuestionAttempt {
   questionId: string;
   result: QuestionResult;
   selectedChoice?: string;
+  /** ALPHA 1.3 — confidence the learner reported before reveal. */
+  confidence?: Confidence;
 }
 
 export interface QuizAttemptSummary {
@@ -110,4 +115,47 @@ export interface ChallengeRunOutcome {
   totalMs?: number;
   /** Inline PNG plots captured from matplotlib during user code. */
   plots?: ChallengePlot[];
+  /** BETA 4.1 — captured matplotlib FuncAnimation objects, frame-by-frame. */
+  animations?: AnimationFrames[];
+}
+
+// ---------------------------------------------------------------------------
+// BETA 4.1 — Animation capture (matplotlib FuncAnimation -> base64 PNG frames)
+// ---------------------------------------------------------------------------
+
+export interface AnimationFrames {
+  fps: number;
+  /** Base64-encoded PNG frames (no data: prefix). */
+  frames: string[];
+  /** True if the animation exceeded the per-run frame cap (currently 120). */
+  truncated?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// BETA 2.1 — Flashcards
+// ---------------------------------------------------------------------------
+
+export interface Flashcard {
+  id: string;
+  topicSlug: string;
+  /** Front side — markdown, may include KaTeX `$...$` / `$$...$$`. */
+  front: string;
+  /** Back side — markdown, may include KaTeX. Should end with a 1-line "why it matters". */
+  back: string;
+  /** Optional pure-KaTeX formula highlighted on the back. */
+  formula?: string;
+  /** Optional one-line mnemonic. */
+  mnemonic?: string;
+}
+
+export type FlashcardReviewRating = "again" | "hard" | "good" | "easy";
+
+export interface FlashcardReviewRecord {
+  id: string;
+  userId: string;
+  cardId: string;
+  reviewedAt: string;
+  rating: FlashcardReviewRating;
+  intervalDays: number;
+  nextDueAt: string;
 }

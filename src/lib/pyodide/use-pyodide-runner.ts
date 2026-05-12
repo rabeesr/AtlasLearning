@@ -8,6 +8,7 @@ import type {
   ChallengeRunOutcome,
   ConsoleLine,
   ChallengePlot,
+  AnimationFrames,
 } from "@/types/practice";
 
 export type PyodideStatus = "loading" | "ready" | "running" | "error";
@@ -22,6 +23,7 @@ export interface UsePyodideRunner {
   traceback: string | null;
   totalMs: number | null;
   plots: ChallengePlot[];
+  animations: AnimationFrames[];
   run: (
     userCode: string,
     tests: ChallengeTest[],
@@ -47,6 +49,7 @@ type WorkerOutbound =
       traceback?: string;
       totalMs?: number;
       plots?: ChallengePlot[];
+      animations?: AnimationFrames[];
     };
 
 export function usePyodideRunner(): UsePyodideRunner {
@@ -65,6 +68,7 @@ export function usePyodideRunner(): UsePyodideRunner {
   const [traceback, setTraceback] = useState<string | null>(null);
   const [totalMs, setTotalMs] = useState<number | null>(null);
   const [plots, setPlots] = useState<ChallengePlot[]>([]);
+  const [animations, setAnimations] = useState<AnimationFrames[]>([]);
 
   useEffect(() => {
     let worker: Worker;
@@ -100,6 +104,7 @@ export function usePyodideRunner(): UsePyodideRunner {
           traceback: data.traceback,
           totalMs: data.totalMs,
           plots: data.plots ?? [],
+          animations: data.animations ?? [],
         };
         setLastResults(data.results);
         setStdout(data.stdout);
@@ -107,6 +112,7 @@ export function usePyodideRunner(): UsePyodideRunner {
         setTraceback(data.traceback ?? null);
         setTotalMs(data.totalMs ?? null);
         setPlots(data.plots ?? []);
+        setAnimations(data.animations ?? []);
         setStatus("ready");
         if (cb) cb(outcome);
       }
@@ -179,6 +185,7 @@ export function usePyodideRunner(): UsePyodideRunner {
     traceback,
     totalMs,
     plots,
+    animations,
     run,
     runTest,
   };

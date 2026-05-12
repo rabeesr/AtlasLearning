@@ -2,6 +2,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { isValidElement, type HTMLAttributes, type ReactNode } from "react";
 
+import { ProbePrompt } from "@/components/learn/probe-prompt";
+import { parseTopicBody } from "@/lib/content/topic-body-parser";
 import { slugifyHeading } from "@/lib/content/topic-learn-sections";
 
 function flattenText(node: ReactNode): string {
@@ -34,7 +36,7 @@ function Heading({
   );
 }
 
-export function TopicMarkdown({ content }: { content: string }) {
+function MarkdownSlice({ content }: { content: string }) {
   const renderHeading = (level: 2 | 3 | 4 | 5 | 6) =>
     function RenderHeading({ node, children, ...props }: MarkdownHeadingProps) {
       void node;
@@ -46,19 +48,52 @@ export function TopicMarkdown({ content }: { content: string }) {
     };
 
   return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        h2: renderHeading(2),
+        h3: renderHeading(3),
+        h4: renderHeading(4),
+        h5: renderHeading(5),
+        h6: renderHeading(6),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
+/**
+ * TopicMarkdown — renders a topic body, splitting out `:::probe` blocks
+ * into interactive `<ProbePrompt>` components so the learner is forced to
+ * predict before revealing. Pass `topicSlug` to enable concept-tracking
+ * for revealed probes.
+ */
+export function TopicMarkdown({
+  content,
+  topicSlug,
+}: {
+  content: string;
+  topicSlug?: string;
+}) {
+  const segments = parseTopicBody(content);
+  return (
     <div className="atlas-prose max-w-none">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          h2: renderHeading(2),
-          h3: renderHeading(3),
-          h4: renderHeading(4),
-          h5: renderHeading(5),
-          h6: renderHeading(6),
-        }}
-      >
-        {content}
-      </ReactMarkdown>
+      {segments.map((seg, i) => {
+        if (seg.kind === "probe") {
+          const p = seg.probe;
+          return (
+            <ProbePrompt
+              key={`probe-${p.id}-${i}`}
+              topicSlug={topicSlug}
+              probeId={p.id}
+              question={p.question}
+              answer={p.answer}
+            />
+          );
+        }
+        return <MarkdownSlice key={`md-${i}`} content={seg.text} />;
+      })}
     </div>
   );
 }

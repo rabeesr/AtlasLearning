@@ -35,6 +35,12 @@ A matrix is a transformation that takes a vector and produces another vector. Ev
 
 A vector in robotics is a *directed arrow*: a force from a thruster, a velocity, a position. If a robot has thrusters producing vectors `v₁` and `v₂`, the span of `{v₁, v₂}` is every direction the robot can move. If `v₁` and `v₂` are **linearly dependent** (parallel), the span collapses to a line and the robot is stuck in one dimension. A drone hovers when the linear combination `c₁v₁ + c₂v₂ + c₃v₃ + c₄v₄` of its rotor thrusts exactly cancels gravity `g` — every control problem is a search for the right coefficients.
 
+:::probe id=la-span-collapse
+**Predict:** a quadrotor's rotor thrust vectors collapse from spanning ℝ³ to spanning a 2D plane mid-flight. What does the robot lose, mechanically?
+???
+It loses one degree of freedom — there is now a direction in ℝ³ it cannot push against, so it can't hold position against any disturbance with a component along that missing axis. In practice this is what happens when a rotor fails: the quadrotor can still pitch and roll, but it cannot independently regulate altitude and orientation simultaneously, so it falls or spins.
+:::
+
 ### Matrix and vector operations
 
 **Matrix multiplication** — composing two transformations into one.
@@ -62,11 +68,23 @@ T = [ R  t ]
 
 where `R` is 3×3 and `t` is 3×1. Vectors are augmented to `[x, y, z, 1]ᵀ`. Now the entire pipeline "rotate, then translate, then rotate again" is one matrix product. If a camera sees a ball at `P_cam` and you know the camera's pose in the world `T_world_cam`, then `P_world = T_world_cam · P_cam`.
 
+:::probe id=la-non-orthogonal-rotation
+**Predict:** if `R` is *not* orthogonal — say, you built it by hand and forgot to normalize — what happens to `‖Rv‖` compared to `‖v‖`?
+???
+Lengths are no longer preserved. A non-orthogonal `R` stretches or shrinks `v` along some axes and shears it on others, so `‖Rv‖ ≠ ‖v‖` in general. Rotation matrices live in `SO(n)`; orthogonality (`RᵀR = I`, `det R = +1`) is exactly the condition that guarantees the map is an isometry. The fix in practice: re-orthonormalize via SVD (`R ← UVᵀ`) every so often when integrating rotations numerically.
+:::
+
 ### Least squares and the normal equations
 
 **Least squares** — find the `x` that minimizes `‖Ax − b‖²` when no exact solution exists.
 
 Real sensors are noisy; with more measurements than unknowns the system `Ax = b` is *overdetermined* and has no exact solution. Define the residual `r = b − Ax` and minimize `‖r‖²`. Take the gradient, set to zero, and you get the **normal equations**: `AᵀA x = Aᵀb`, with closed form `x = (AᵀA)⁻¹Aᵀb`. In practice, never form `(AᵀA)⁻¹` — use QR or SVD, which are numerically stable. This is the bedrock for sensor calibration, regression, and the linearized step inside every iterative state estimator.
+
+:::probe id=la-normal-equations
+**Predict:** two columns of `A` in a least-squares fit are nearly identical. What does `AᵀA` look like, and what does that mean for the solution?
+???
+`AᵀA` becomes nearly singular — its smallest eigenvalue is close to zero, so its inverse blows up. The least-squares estimate then has huge variance along the direction where the columns are collinear: small measurement noise produces wildly different `x`. The diagnosis is to check the condition number of `A` (or its singular values); the fix is to switch to QR/SVD instead of the normal equations, or add Tikhonov regularization to lift the smallest singular value off zero.
+:::
 
 ### Recursive least squares
 
@@ -85,6 +103,12 @@ Eigendecomposition reveals the natural axes of a transformation. **Power iterati
 **SVD** — every matrix factors as `A = UΣVᵀ`, with `U`, `V` orthonormal and `Σ` diagonal of non-negative singular values.
 
 SVD works on any matrix, square or not, singular or not. The diagonal entries of `Σ` (singular values, sorted descending) measure how much the transformation stretches each principal direction. The **condition number** `σ_max / σ_min` measures sensitivity to noise — large means trouble. When `σ_min ≈ 0`, the matrix is *singular* — a robot arm in a singular configuration loses a degree of freedom and inverse kinematics blows up. SVD is also the most numerically reliable tool for least squares, low-rank approximation, and (as below) point-cloud alignment.
+
+:::probe id=la-condition-number
+**Predict:** the SVD of a manipulator's Jacobian gives `Σ = diag(10, 4, 0.001)`. What does the small singular value tell you physically, and what's the danger of inverting `J` here?
+???
+The arm is near a *singular configuration*: there is a direction in task space the end-effector can barely move along, because one combination of joint velocities produces almost no Cartesian motion. The condition number is `10/0.001 = 10⁴`, so inverting `J` will amplify any joint-velocity noise by ~10⁴ along that fragile direction — inverse kinematics produces wildly large, unsafe joint commands. Production code falls back to a damped pseudo-inverse (or stops at the singularity) rather than using `J⁻¹` directly.
+:::
 
 ## Worked example
 

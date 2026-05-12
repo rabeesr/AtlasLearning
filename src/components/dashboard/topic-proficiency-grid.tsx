@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 
 import { Badge, Card, ProgressBar } from "@/components/shared/ui";
+import { MasteryPill } from "@/components/dashboard/mastery-pill";
 import { getSubtopicLearnHref } from "@/lib/content/topic-learn-sections";
 import { STATUS_LABEL, STATUS_TONE } from "@/lib/learner/status";
+import { levelFromScore } from "@/lib/progress/proficiency-calculator";
 import type { TopicSummary } from "@/types/learner";
 
 export function TopicProficiencyGrid({
@@ -46,7 +48,10 @@ export function TopicProficiencyGrid({
                   </p>
                 ) : null}
               </div>
-              <Badge tone={STATUS_TONE[summary.status]}>{STATUS_LABEL[summary.status]}</Badge>
+              <div className="flex flex-col items-end gap-1.5">
+                <Badge tone={STATUS_TONE[summary.status]}>{STATUS_LABEL[summary.status]}</Badge>
+                <MasteryPill level={levelFromScore(summary.proficiencyScore, summary.status)} />
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <ProgressBar value={summary.proficiencyScore} tone={tone} className="flex-1" />

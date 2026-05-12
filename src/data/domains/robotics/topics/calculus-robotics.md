@@ -34,6 +34,12 @@ Calculus in robotics has three jobs: **linearize** (turn the curved world into a
 
 Around a point `a`, any smooth `f(x)` can be written as `f(a) + f'(a)(x − a) + ½f''(a)(x − a)² + …`. Drop everything past the first derivative and you have the **tangent-line approximation** `L(x) = f(a) + f'(a)(x − a)`. The canonical robotics example is the **small-angle approximation**: since `sin(θ) = θ − θ³/6 + …`, for small `θ` we set `sin(θ) ≈ θ`, which converts a nonlinear pendulum equation into a linear one a CPU can solve at 1 kHz. Linearization is what makes PID and LQR tractable on real hardware.
 
+:::probe id=ca-small-angle
+**Predict:** a controller designed with `sin(θ) ≈ θ` is deployed on a pendulum that swings to 45°. What happens to the controller's performance, and why?
+???
+The third-order term `−θ³/6` is no longer negligible — at 45° (≈ 0.785 rad) it's about 10% of `sin θ`, so the linear model systematically over-predicts the restoring force. The controller pushes harder than it should, leading to overshoot, slower settling, or outright instability if the closed-loop gain margin was tight. The fix is either gain-scheduling (re-linearize around several operating points) or moving to a nonlinear controller (feedback linearization, MPC).
+:::
+
 ### The gradient and the Jacobian
 
 **Jacobian** — the matrix of first partial derivatives that linearizes a vector-valued function of several variables.
@@ -51,6 +57,12 @@ Three workhorses, in order of accuracy and cost:
 - **Simpson's rule:** quadratic fit between three points. Higher precision when the underlying signal is smooth.
 
 Every measurement has a small bias `ε`. Integrating once gives `∫(v + ε) dt = ∫v dt + εt` — the error grows **linearly with time**. This is why **dead reckoning** (estimating position by integrating wheel-encoder velocity) eventually loses the robot, and why every long-running estimator eventually needs an absolute reference (GPS, landmarks, a map) to correct drift.
+
+:::probe id=ca-double-integration-bias
+**Predict:** an IMU's accelerometer has a constant bias `ε`. You integrate acceleration twice to estimate position. How does the position error grow with time?
+???
+Once-integrated velocity has error `εt` (linear). Integrating again gives position error `½εt²` — *quadratic* in time. A 0.01 m/s² bias becomes 1.8 m of position error in 60 seconds. This is why IMU-only navigation is hopeless over more than a few seconds without a correcting source (GPS, vision, magnetometer). Filters like the EKF / UKF exist exactly to fuse the fast-but-drifty IMU with slow-but-absolute references.
+:::
 
 ### Ordinary differential equations and state-space form
 
@@ -93,11 +105,23 @@ y_next = y + (h/6)·(k₁ + 2k₂ + 2k₃ + k₄)
 
 The four samples capture curvature in `f` that Euler misses, so RK4 stays accurate at much larger step sizes — and rarely "explodes" the way Euler does on stiff systems. It's the default integrator for almost every physics simulator and offline trajectory planner.
 
+:::probe id=ca-rk4-vs-euler
+**Predict:** you simulate the same pendulum with Euler and with RK4 at `Δt = 0.05 s` for 60 seconds. Both start with zero energy error. Which one ends with more energy in the system, and roughly by how much?
+???
+Forward Euler is *not energy-conserving* on oscillators — it pumps energy in on every step, so the pendulum's amplitude slowly grows. RK4 has much smaller local truncation error (`O(h⁵)` vs `O(h²)`), so its energy drift is roughly five orders of magnitude smaller per step. In practice, at `Δt = 0.05 s` Euler can double the pendulum's amplitude over a minute while RK4 stays visually indistinguishable from the analytic solution. For perfectly conservative long-horizon simulation, you reach for symplectic integrators (e.g., velocity-Verlet) instead.
+:::
+
 ### Gradient descent for path planning
 
 **Gradient descent** — iteratively step in the direction of steepest decrease to minimize a cost function.
 
 Define a **potential field** over the workspace: `−100` at the goal, `+100` at obstacles, smoothly interpolated between. The robot's update rule is `p_next = p_current − α · ∇f(p_current)` — slide downhill toward the goal, away from obstacles. The step size `α` is the same dial you'll see everywhere in optimization: too big and you overshoot or oscillate; too small and you converge slowly. Local minima (a wall-shaped trap) are the well-known failure mode and the reason production planners add escape heuristics or switch to global methods.
+
+:::probe id=ca-gradient-step-size
+**Predict:** in a potential-field planner, you double the step size `α` to converge faster. Suddenly the robot oscillates back and forth across the goal instead of settling. What did you cross?
+???
+You crossed the *stability threshold* — informally, `α > 2/L` where `L` is the Lipschitz constant of the gradient. Above that, each step overshoots far enough that the gradient now points back the way you came, and you bounce. The fix is either backtracking line search (shrink `α` adaptively) or Nesterov / momentum-style methods. The same threshold story explains why a too-high proportional gain in a PID controller produces sustained oscillation.
+:::
 
 ### Lagrange multipliers for constrained optimization
 

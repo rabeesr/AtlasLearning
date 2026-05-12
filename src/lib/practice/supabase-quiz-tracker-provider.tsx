@@ -67,6 +67,8 @@ export function SupabaseQuizTrackerProvider({ children }: { children: ReactNode 
               question_id: attempt.questionId,
               result: attempt.result,
               selected_choice: attempt.selectedChoice ?? null,
+              // ALPHA 1.3 — confidence picked before reveal/submit.
+              confidence: attempt.confidence ?? null,
             },
             { onConflict: "attempt_id,question_id" },
           );

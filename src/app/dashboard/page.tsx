@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { CalibrationBadge } from "@/components/dashboard/calibration-badge";
+import { MixedReviewCard } from "@/components/dashboard/mixed-review-card";
 import { PhaseProgressCard } from "@/components/dashboard/phase-progress-card";
 import { TopicProficiencyGrid } from "@/components/dashboard/topic-proficiency-grid";
 import { Badge, Card, SectionHeader, Stat } from "@/components/shared/ui";
@@ -20,7 +22,10 @@ export default async function DashboardPage() {
         eyebrow={`WELCOME BACK / ${user.displayName.toUpperCase()}`}
         title="Robotics proficiency at a glance"
         description="Track strength across phases, see where decay is starting, and drill down into topic-level detail."
+        action={<CalibrationBadge />}
       />
+
+      <MixedReviewCard />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat

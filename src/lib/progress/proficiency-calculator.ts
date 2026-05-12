@@ -4,6 +4,97 @@ import type {
   ProficiencyComponentDetail,
   ProficiencyInputs,
 } from "@/types/proficiency";
+import type { LearnerTopicStatus } from "@/types/learner";
+
+// ---------------------------------------------------------------------------
+// ALPHA 1.1 — Discrete mastery levels derived from `proficiency_score`.
+// ---------------------------------------------------------------------------
+
+export type MasteryLevel =
+  | "locked"
+  | "attempted"
+  | "familiar"
+  | "proficient"
+  | "mastered";
+
+/**
+ * Map a raw proficiency score (+ topic status) to a discrete mastery level.
+ * Thresholds match the milestone plan: 1+ attempted, 30+ familiar, 70+
+ * proficient, 90+ mastered. A `locked` status always wins.
+ */
+export function levelFromScore(
+  score: number,
+  status: LearnerTopicStatus,
+): MasteryLevel {
+  if (status === "locked") return "locked";
+  if (score >= 90) return "mastered";
+  if (score >= 70) return "proficient";
+  if (score >= 30) return "familiar";
+  return "attempted";
+}
+
+/**
+ * ALPHA 1.3 — Calibration: ratio of correct answers among high-confidence
+ * picks. Surfaces a small dashboard badge. Server-callable, takes a
+ * Supabase client (server or user-scoped) so the same RLS rules apply.
+ */
+export interface CalibrationStats {
+  correctOnHigh: number;
+  totalHigh: number;
+  ratio: number | null;
+}
+
+interface CalibrationRow {
+  result: string;
+  confidence: string | null;
+}
+
+interface MinimalSupabaseClient {
+  from(table: string): {
+    select(columns: string): {
+      eq(column: string, value: string): {
+        eq(column: string, value: string): Promise<{
+          data: CalibrationRow[] | null;
+          error: { message: string } | null;
+        }>;
+      };
+    };
+  };
+}
+
+export async function getCalibration(
+  supabase: MinimalSupabaseClient,
+  userId: string,
+): Promise<CalibrationStats> {
+  if (!userId || userId === "demo-user") {
+    return { correctOnHigh: 0, totalHigh: 0, ratio: null };
+  }
+  const { data, error } = await supabase
+    .from("question_attempts")
+    .select("result, confidence")
+    .eq("user_id", userId)
+    .eq("confidence", "high");
+  if (error) {
+    console.error("[calibration] read failed:", error);
+    return { correctOnHigh: 0, totalHigh: 0, ratio: null };
+  }
+  const rows = (data ?? []) as CalibrationRow[];
+  const totalHigh = rows.length;
+  const correctOnHigh = rows.filter((r) => r.result === "correct").length;
+  return {
+    correctOnHigh,
+    totalHigh,
+    ratio: totalHigh > 0 ? correctOnHigh / totalHigh : null,
+  };
+}
+
+export const MASTERY_LABEL: Record<MasteryLevel, string> = {
+  locked: "Locked",
+  attempted: "Attempted",
+  familiar: "Familiar",
+  proficient: "Proficient",
+  mastered: "Mastered",
+};
 
 const DEFAULT_WEIGHTS: Record<ProficiencyComponent, number> = {
   learn: 0.20,

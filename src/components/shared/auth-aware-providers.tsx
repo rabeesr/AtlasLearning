@@ -3,6 +3,7 @@
 import { useAuth } from "@clerk/nextjs";
 import type { ReactNode } from "react";
 
+import { ReflectionProvider } from "@/components/learn/reflection-context";
 import { InSessionQuizTrackerProvider } from "@/lib/practice/quiz-tracker";
 import { SupabaseQuizTrackerProvider } from "@/lib/practice/supabase-quiz-tracker-provider";
 import { InSessionEngagementProvider } from "@/lib/progress/proficiency-tracker";
@@ -23,15 +24,19 @@ export function AuthAwareProviders({ children }: { children: ReactNode }) {
   // still renders. The user is treated as signed-out during this brief window.
   if (!isLoaded || !isSignedIn) {
     return (
-      <InSessionEngagementProvider>
-        <InSessionQuizTrackerProvider>{children}</InSessionQuizTrackerProvider>
-      </InSessionEngagementProvider>
+      <ReflectionProvider>
+        <InSessionEngagementProvider>
+          <InSessionQuizTrackerProvider>{children}</InSessionQuizTrackerProvider>
+        </InSessionEngagementProvider>
+      </ReflectionProvider>
     );
   }
 
   return (
-    <SupabaseEngagementProvider>
-      <SupabaseQuizTrackerProvider>{children}</SupabaseQuizTrackerProvider>
-    </SupabaseEngagementProvider>
+    <ReflectionProvider>
+      <SupabaseEngagementProvider>
+        <SupabaseQuizTrackerProvider>{children}</SupabaseQuizTrackerProvider>
+      </SupabaseEngagementProvider>
+    </ReflectionProvider>
   );
 }

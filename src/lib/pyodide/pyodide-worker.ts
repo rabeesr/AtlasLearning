@@ -68,6 +68,15 @@ async function fetchRoboticsShim(): Promise<string> {
   return res.text();
 }
 
+async function fetchRoboticsSimShim(): Promise<string> {
+  // BETA 4.3 — robotics_sim animation helpers, fetched from /public.
+  const res = await fetch("/atlas-python/robotics_sim.py");
+  if (!res.ok) {
+    throw new Error(`Failed to load robotics_sim shim (${res.status})`);
+  }
+  return res.text();
+}
+
 async function bootPyodide(): Promise<any> {
   post({ type: "init-progress", message: "Loading Pyodide runtime…" });
   // importScripts is the recommended in-worker loader from the Pyodide docs.
@@ -82,9 +91,11 @@ async function bootPyodide(): Promise<any> {
 
   post({ type: "init-progress", message: "Installing robotics shim…" });
   const shimSrc = await fetchRoboticsShim();
+  const simShimSrc = await fetchRoboticsSimShim();
   // Write the shim into the in-memory FS and add the dir to sys.path.
   pyodide.FS.mkdirTree("/home/pyodide/atlas");
   pyodide.FS.writeFile("/home/pyodide/atlas/robotics.py", shimSrc);
+  pyodide.FS.writeFile("/home/pyodide/atlas/robotics_sim.py", simShimSrc);
   await pyodide.runPythonAsync(`
 import sys
 if "/home/pyodide/atlas" not in sys.path:
@@ -93,6 +104,7 @@ if "/home/pyodide/atlas" not in sys.path:
 
   // Sanity-check: importing robotics must work; failure here is surfaced as init-error.
   await pyodide.runPythonAsync("import robotics  # noqa: F401");
+  await pyodide.runPythonAsync("import robotics_sim  # noqa: F401");
 
   return pyodide;
 }
@@ -131,6 +143,8 @@ interface RunOutcome {
   traceback?: string;
   totalMs: number;
   plots: { pngBase64: string }[];
+  /** BETA 4.1 — captured matplotlib.animation.FuncAnimation frames. */
+  animations: { fps: number; frames: string[]; truncated: boolean }[];
 }
 
 async function loadExtraPackages(pyodide: any, packages?: string[]) {
@@ -170,6 +184,35 @@ try:
     _plt.show = _atlas_show
 except Exception:
     _atlas_captured_figs = []
+
+# BETA 4.1 — track every FuncAnimation instance constructed by user code so the
+# worker can render it frame-by-frame after the run finishes. We monkey-patch
+# the FuncAnimation constructor to append to a module-level list. The figure,
+# the user's update function, the frame iterable, and the interval are stashed
+# verbatim so collectAnimations() can replay them.
+try:
+    import matplotlib.animation as _atlas_anim
+    _atlas_tracked_anims = []
+    _atlas_FuncAnimation_orig = _atlas_anim.FuncAnimation
+    class _AtlasTrackedFuncAnimation(_atlas_FuncAnimation_orig):
+        def __init__(self, fig, func, frames=None, init_func=None,
+                     fargs=None, save_count=None, *, cache_frame_data=True,
+                     **kwargs):
+            interval = kwargs.get("interval", 200)
+            _atlas_tracked_anims.append({
+                "fig": fig,
+                "func": func,
+                "frames": frames,
+                "init_func": init_func,
+                "fargs": fargs,
+                "interval": interval,
+            })
+            super().__init__(fig, func, frames=frames, init_func=init_func,
+                             fargs=fargs, save_count=save_count,
+                             cache_frame_data=cache_frame_data, **kwargs)
+    _atlas_anim.FuncAnimation = _AtlasTrackedFuncAnimation
+except Exception:
+    _atlas_tracked_anims = []
 `);
 }
 
@@ -215,6 +258,86 @@ _pngs
       ? (result as { toJs: () => string[] }).toJs()
       : (result as string[]);
     return Array.isArray(arr) ? arr.map((pngBase64) => ({ pngBase64 })) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function collectAnimations(
+  pyodide: any,
+): Promise<{ fps: number; frames: string[]; truncated: boolean }[]> {
+  try {
+    const raw = (await pyodide.runPythonAsync(`
+import io, base64, numbers
+_anim_payloads = []
+_MAX_FRAMES = 120
+try:
+    for entry in _atlas_tracked_anims:
+        fig = entry["fig"]
+        func = entry["func"]
+        frames = entry["frames"]
+        init_func = entry["init_func"]
+        fargs = entry["fargs"] or ()
+        interval = entry["interval"] or 200
+        fps = max(1.0, 1000.0 / float(interval))
+
+        # Normalize frames into a concrete iterable.
+        if frames is None:
+            frame_list = list(range(100))
+        elif isinstance(frames, numbers.Integral):
+            frame_list = list(range(int(frames)))
+        elif callable(frames):
+            # Generator function — call it and materialize lazily up to cap+1.
+            it = frames()
+            frame_list = []
+            for v in it:
+                frame_list.append(v)
+                if len(frame_list) > _MAX_FRAMES:
+                    break
+        else:
+            frame_list = list(frames)
+
+        truncated = False
+        if len(frame_list) > _MAX_FRAMES:
+            frame_list = frame_list[:_MAX_FRAMES]
+            truncated = True
+
+        if init_func is not None:
+            try:
+                init_func()
+            except Exception:
+                pass
+
+        png_frames = []
+        for fv in frame_list:
+            try:
+                func(fv, *fargs)
+            except Exception:
+                # If a single frame errors, skip it but keep going.
+                continue
+            buf = io.BytesIO()
+            try:
+                fig.savefig(buf, format="png", bbox_inches="tight", dpi=90)
+            except Exception:
+                continue
+            png_frames.append(base64.b64encode(buf.getvalue()).decode("ascii"))
+
+        _anim_payloads.append({
+            "fps": fps,
+            "frames": png_frames,
+            "truncated": truncated,
+        })
+    _atlas_tracked_anims.clear()
+except Exception:
+    pass
+_anim_payloads
+`)) as unknown;
+    const arr = (raw as { toJs?: (opts?: unknown) => unknown })?.toJs
+      ? ((raw as { toJs: (opts?: unknown) => unknown }).toJs({
+          dict_converter: Object.fromEntries,
+        }) as { fps: number; frames: string[]; truncated: boolean }[])
+      : (raw as { fps: number; frames: string[]; truncated: boolean }[]);
+    return Array.isArray(arr) ? arr : [];
   } catch {
     return [];
   }
@@ -278,6 +401,10 @@ async function executeRun(
     });
   }
 
+  // BETA 4.1 — animations BEFORE plots, because rendering frames may close
+  // the underlying figures (we let collectPlots() then catch anything left
+  // open from non-animated user code).
+  const animations = await collectAnimations(pyodide);
   const plots = await collectPlots(pyodide);
   const totalMs = Math.round(performance.now() - startTotal);
 
@@ -286,7 +413,7 @@ async function executeRun(
     .map((l) => (l.origin === "user" ? l.text : `[${l.origin}]\n${l.text}`))
     .join("");
 
-  return { results, stdout, consoleLines, traceback, totalMs, plots };
+  return { results, stdout, consoleLines, traceback, totalMs, plots, animations };
 }
 
 async function handleRun(req: RunRequest) {
@@ -347,6 +474,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
         traceback: err?.message ?? String(err),
         totalMs: 0,
         plots: [],
+        animations: [],
       });
     }
     return;
@@ -371,6 +499,7 @@ self.addEventListener("message", async (event: MessageEvent) => {
         traceback: err?.message ?? String(err),
         totalMs: 0,
         plots: [],
+        animations: [],
       });
     }
   }

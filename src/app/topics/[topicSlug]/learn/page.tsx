@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { FreeRecallPrompt } from "@/components/learn/free-recall-prompt";
 import { Card } from "@/components/shared/ui";
 import { Checklist } from "@/components/topic/checklist";
 import { LiveProficiencyBreakdown } from "@/components/topic/live-proficiency";
@@ -82,7 +83,7 @@ export default async function TopicLearnPage({
       ) : null}
 
       {content ? (
-        <TopicMarkdown content={content.body} />
+        <TopicMarkdown content={content.body} topicSlug={topicSlug} />
       ) : (
         <div className="py-8 text-center text-sm text-[var(--text-muted)]">
           <p className="text-[var(--text)]">Study notes are not authored yet.</p>
@@ -101,6 +102,8 @@ export default async function TopicLearnPage({
           />
         </div>
       ) : null}
+
+      {content ? <FreeRecallPrompt topicSlug={topicSlug} /> : null}
 
       {content?.sources.length ? (
         <div className="mt-8 border-t border-[var(--border)] pt-4">

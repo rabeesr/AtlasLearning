@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
+import { AnimationPlayer } from "@/components/practice/animation-player";
 import { ChallengeAttemptsPanel } from "@/components/practice/challenge-attempts-panel";
 import { ChallengeHints } from "@/components/practice/challenge-hints";
 import { ChallengeTestRow } from "@/components/practice/challenge-test-row";
@@ -26,7 +27,19 @@ function EditorSkeleton() {
   );
 }
 
-export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
+// ALPHA 1.2 — added `mode` prop. "standalone" = full UI; "session" hides the
+// attempts panel and the example-solution button (used inside mixed sessions).
+// Animation rendering added by BETA stays compatible.
+export function ChallengeRunner({
+  challenge,
+  mode = "standalone",
+  onSessionComplete,
+}: {
+  challenge: CodingChallenge;
+  mode?: "standalone" | "session";
+  /** Called once at least one test has passed in session mode. */
+  onSessionComplete?: (allPassed: boolean) => void;
+}) {
   const tracker = useChallengeTracker(challenge.slug);
   const runner = usePyodideRunner();
 
@@ -64,6 +77,12 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
       setHasSubmitted(true);
       await tracker.recordRun(attemptId, outcome.results, code);
       setAttemptsRefreshKey((k) => k + 1);
+      // ALPHA 1.2 — surface pass/fail back to the session runner.
+      if (mode === "session" && onSessionComplete) {
+        const allPassed =
+          outcome.results.length > 0 && outcome.results.every((r) => r.passed);
+        onSessionComplete(allPassed);
+      }
     }
   };
 
@@ -189,22 +208,24 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
               <Button onClick={onCopy} variant="secondary" size="sm">
                 {copied ? "Copied" : "Copy"}
               </Button>
-              {!gaveUp && !hasSubmitted ? (
+              {!gaveUp && !hasSubmitted && mode === "standalone" ? (
                 <Button onClick={onGiveUp} variant="ghost">
                   Give up
                 </Button>
               ) : null}
-              <Button
-                onClick={onReveal}
-                variant="secondary"
-                className={
-                  canReveal && !showSolution
-                    ? ""
-                    : "pointer-events-none opacity-40"
-                }
-              >
-                Show example solution
-              </Button>
+              {mode === "standalone" ? (
+                <Button
+                  onClick={onReveal}
+                  variant="secondary"
+                  className={
+                    canReveal && !showSolution
+                      ? ""
+                      : "pointer-events-none opacity-40"
+                  }
+                >
+                  Show example solution
+                </Button>
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               {runner.totalMs !== null ? (
@@ -285,6 +306,21 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
             </pre>
           )}
 
+          {/* BETA 4.2 — animation players rendered above static plots so the
+              motion is the first thing the learner sees. */}
+          {runner.animations.length > 0 ? (
+            <div className="mt-4 flex flex-col gap-3">
+              {runner.animations.map((anim, i) => (
+                <AnimationPlayer
+                  key={i}
+                  frames={anim.frames}
+                  fps={anim.fps}
+                  truncated={anim.truncated}
+                />
+              ))}
+            </div>
+          ) : null}
+
           {/* Inline matplotlib plots — visualization-hook bonus feature. */}
           {runner.plots.length > 0 ? (
             <div className="mt-4">
@@ -310,12 +346,14 @@ export function ChallengeRunner({ challenge }: { challenge: CodingChallenge }) {
           ) : null}
         </Card>
 
-        {/* Attempt history (signed-in only — hidden otherwise) */}
-        <ChallengeAttemptsPanel
-          challengeSlug={challenge.slug}
-          totalTests={challenge.tests.length}
-          refreshKey={attemptsRefreshKey}
-        />
+        {/* Attempt history (signed-in only — hidden otherwise). Skipped in session mode. */}
+        {mode === "standalone" ? (
+          <ChallengeAttemptsPanel
+            challengeSlug={challenge.slug}
+            totalTests={challenge.tests.length}
+            refreshKey={attemptsRefreshKey}
+          />
+        ) : null}
 
         {/* Example solution */}
         {showSolution ? (

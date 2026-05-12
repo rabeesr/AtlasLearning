@@ -75,3 +75,7 @@ export async function listTopicContentSlugs(): Promise<string[]> {
     return [];
   }
 }
+
+// Inline knowledge-probe parsing lives in `./topic-body-parser` so client
+// components can import it without dragging in node:fs.
+export { parseTopicBody, type ParsedProbe, type TopicBodySegment } from "@/lib/content/topic-body-parser";
