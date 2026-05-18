@@ -51,7 +51,7 @@ run-test → run-result (single test)
 ### Two Python shims fetched at init from `public/atlas-python/`
 
 - `robotics.py` — math/kinematics helpers (`rot_x/y/z`, `homogeneous`, `skew`, `PID`).
-- `robotics_sim.py` — matplotlib animation helpers (`animate_pendulum`, `animate_trajectory_2d`, `animate_arm_2d`).
+- `robotics_sim.py` — matplotlib animation helpers (`animate_pendulum`, `animate_trajectory_2d`, `animate_arm_2d`, `simulate_cart_pole`).
 
 These live in **two places** — `src/data/python/<name>.py` (canonical) and `public/atlas-python/<name>.py` (served). **You must `cp` between them whenever you change either.** A future improvement is a single source + copy-on-build, but today the project relies on manual sync.
 
@@ -186,8 +186,79 @@ The current milestone plan lives at `/Users/Rabees/.claude/plans/i-want-to-implm
 - Clerk provider
 - Supabase client provider
 - `ReflectionProvider` (from §6)
+- `TutorProvider` (from §14) + a singleton `<TutorCompanion />` at the bottom
 
 Add new client-side context providers here, never deeper, so every client component can consume them.
+
+## 14. The tutor pipeline — Ask Atlas
+
+`Ask Atlas` is a **global**, surface-aware learning companion. One floating pill is rendered everywhere (except `/sign-in`, `/sign-up`); clicking it slides in a right-rail panel. Per-page state is published into `TutorProvider` via `useTutorSurface(...)`.
+
+### Data flow
+
+```
+client component                 server route                 LLM
+  useTutorSurface(...)              /api/tutor              Groq llama-3.3-70b
+        ↓                                ↑                       ↑
+  user types message  →  fetch POST  →  context loader  →  buildSystemPrompt
+                                       (topic md, code,         (surface overlay
+                                        retrieved chunks)        + JSON envelope)
+                                            ↓
+                                     persist to
+                                     tutor_exchanges
+                                     (skip demo / signed-out)
+```
+
+### Surface contract — `src/lib/tutor/types.ts` + `system-prompt.ts`
+
+Six surfaces, two modes:
+
+| Surface     | Mode                | Output kinds allowed |
+|-------------|---------------------|----------------------|
+| `learn`     | Explanatory-Socratic| `explain`, `question` |
+| `quiz`      | Strict Socratic     | `question` |
+| `flashcard` | Strict Socratic     | `question` |
+| `challenge` | Code-grounded ladder| `question`, `diff_hint` |
+| `review`    | Strict Socratic     | `question` |
+| `global`    | Explanatory-Socratic| `explain`, `question` |
+
+`violatesSurfaceContract(surface, kind)` is the server-side enforcer. The route retries once on violation, then surfaces a graceful fallback message.
+
+### Retrieval corpus
+
+`reference_chunks` (pgvector / `voyage-3-lite`, 512-dim) holds:
+- The two mature topic notes (`linear-algebra-robotics`, `calculus-robotics`) chunked by H2.
+- Every `src/data/references/*.md` chunked the same way.
+
+Build (or rebuild) with:
+```
+npm run build:tutor-corpus
+```
+
+This is required after editing topic notes or reference docs — embeddings are stale otherwise. Env vars: `VOYAGE_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`.
+
+The retrieval implementation in `src/lib/tutor/retrieval.ts` currently does client-side k-NN in JS because the corpus is small (<200 chunks). If the corpus grows past ~1000 chunks, replace with a pgvector RPC.
+
+### Answer-leak guards
+
+Three layers:
+1. **Per-surface assembly** in `loadSurfaceBlock` — the route only ever loads what each surface is allowed to see (e.g., quiz answer key is NEVER fetched).
+2. **Field stripping** in `sanitizeSurface` — any key in `surface` matching `/answer|solution|correct|cardback/i` is dropped, regardless of what the client smuggled.
+3. **System prompt overlay** for `quiz` and `flashcard` surfaces explicitly forbids identifying correct answers.
+
+When adding a new surface, mirror all three layers.
+
+### Demo-user behavior
+
+Demo / signed-out users **can** use the tutor (otherwise the demo loses its headline feature). The route skips the `tutor_exchanges` insert when there is no Clerk user ID. See §5.
+
+### Adding a new surface
+
+1. Add it to the `TutorSurface` union in `src/lib/tutor/types.ts`.
+2. Add a system prompt overlay in `src/lib/tutor/system-prompt.ts`.
+3. Add a `loadSurfaceBlock` case in `src/app/api/tutor/route.ts`.
+4. Add the `useTutorSurface(...)` call from the corresponding client page.
+5. If the surface has hidden ground truth (answer keys, solution code), put the leak guard in place at all three layers above.
 
 ## 13. When in doubt
 

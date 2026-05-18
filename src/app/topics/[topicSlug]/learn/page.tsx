@@ -5,6 +5,7 @@ import { Card } from "@/components/shared/ui";
 import { Checklist } from "@/components/topic/checklist";
 import { LiveProficiencyBreakdown } from "@/components/topic/live-proficiency";
 import { TopicMarkdown } from "@/components/topic/topic-markdown";
+import { TutorSurfaceBinder } from "@/components/tutor/tutor-surface-binder";
 import { getTopicBySlug } from "@/lib/content/curriculum";
 import { getQuizForTopic } from "@/lib/content/quiz-content";
 import { getTopicContent } from "@/lib/content/topic-content";
@@ -31,6 +32,7 @@ export default async function TopicLearnPage({
 
   return (
     <Card>
+      <TutorSurfaceBinder surface={{ kind: "learn", topicSlug }} />
       {content?.prerequisitesRecap.length ? (
         <div className="mb-4 rounded-md border border-[var(--border)] bg-[var(--panel-muted)] p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--accent)]">

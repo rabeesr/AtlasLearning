@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Badge, Button, Card } from "@/components/shared/ui";
 import { useReflection } from "@/components/learn/reflection-context";
+import { useTutorSurface } from "@/components/tutor/tutor-context";
 import { useQuizTracker } from "@/lib/practice/quiz-tracker";
 import type {
   Confidence,
@@ -96,6 +97,22 @@ export function QuizPlayer({
   }, [quiz.topicSlug]);
 
   const question: QuizQuestion | undefined = quiz.items[index];
+
+  // Register the tutor surface with the current quiz question. The route
+  // server-side strips any answer-key fields, so even if `quiz.items` had
+  // them, they could not leak through.
+  useTutorSurface(
+    question
+      ? {
+          kind: "quiz",
+          topicSlug: quiz.topicSlug,
+          questionId: question.id,
+          questionText: question.prompt,
+          choices:
+            question.type === "multiple_choice" ? question.choices : undefined,
+        }
+      : { kind: "global" },
+  );
   const total = quiz.items.length;
 
   const recordResult = (result: QuestionResult, choice?: string) => {

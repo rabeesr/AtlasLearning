@@ -150,6 +150,7 @@ export async function loadPreferences(
 }
 
 export async function savePreferences(userId: string, prefs: UserPreferences): Promise<void> {
+  if (!userId || userId === "demo-user") return;
   const supabase = await getServerSupabaseClient();
   const { error } = await supabase.from("review_preferences").upsert(
     {

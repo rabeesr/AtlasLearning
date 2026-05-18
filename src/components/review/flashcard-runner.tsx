@@ -19,6 +19,7 @@ import { useCallback, useMemo, useState } from "react";
 import { FlashcardFlipCard } from "@/components/review/flashcard-card";
 import { Badge, Button, Card } from "@/components/shared/ui";
 import { useReflection } from "@/components/learn/reflection-context";
+import { useTutorSurface } from "@/components/tutor/tutor-context";
 import { useSupabase } from "@/hooks/useSupabase";
 import { nextDueAt, nextInterval } from "@/lib/reviews/flashcard-scheduler";
 import type { Flashcard, FlashcardReviewRating } from "@/types/practice";
@@ -66,6 +67,18 @@ export function FlashcardRunner({
 
   const current = cards[index];
   const done = !current;
+
+  // Register surface for the global tutor — only the front of the card is
+  // shared (the route also drops cardBack server-side as belt-and-braces).
+  useTutorSurface(
+    current
+      ? {
+          kind: "flashcard",
+          topicSlug: current.topicSlug,
+          cardFront: current.front,
+        }
+      : { kind: "global" },
+  );
 
   const onRate = useCallback(
     async (rating: FlashcardReviewRating) => {

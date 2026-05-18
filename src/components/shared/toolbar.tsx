@@ -4,14 +4,16 @@ import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Route } from "next";
 
-const primaryLinks = [
+const primaryLinks: { href: string; label: string }[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/topics", label: "Topics" },
   { href: "/quizzes", label: "Quizzes" },
   { href: "/challenges", label: "Challenges" },
+  { href: "/playground", label: "Playground" },
   { href: "/projects", label: "Projects" },
-] as const;
+];
 
 export function Toolbar() {
   const pathname = usePathname() ?? "";
@@ -58,7 +60,7 @@ export function Toolbar() {
           {primaryLinks.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={link.href as Route}
               className={navLinkClass(isActive(link.href))}
             >
               {link.label}

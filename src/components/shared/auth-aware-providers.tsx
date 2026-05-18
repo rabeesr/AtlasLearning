@@ -4,6 +4,8 @@ import { useAuth } from "@clerk/nextjs";
 import type { ReactNode } from "react";
 
 import { ReflectionProvider } from "@/components/learn/reflection-context";
+import { TutorProvider } from "@/components/tutor/tutor-context";
+import { TutorCompanion } from "@/components/tutor/tutor-panel";
 import { InSessionQuizTrackerProvider } from "@/lib/practice/quiz-tracker";
 import { SupabaseQuizTrackerProvider } from "@/lib/practice/supabase-quiz-tracker-provider";
 import { InSessionEngagementProvider } from "@/lib/progress/proficiency-tracker";
@@ -25,18 +27,24 @@ export function AuthAwareProviders({ children }: { children: ReactNode }) {
   if (!isLoaded || !isSignedIn) {
     return (
       <ReflectionProvider>
-        <InSessionEngagementProvider>
-          <InSessionQuizTrackerProvider>{children}</InSessionQuizTrackerProvider>
-        </InSessionEngagementProvider>
+        <TutorProvider>
+          <InSessionEngagementProvider>
+            <InSessionQuizTrackerProvider>{children}</InSessionQuizTrackerProvider>
+          </InSessionEngagementProvider>
+          <TutorCompanion />
+        </TutorProvider>
       </ReflectionProvider>
     );
   }
 
   return (
     <ReflectionProvider>
-      <SupabaseEngagementProvider>
-        <SupabaseQuizTrackerProvider>{children}</SupabaseQuizTrackerProvider>
-      </SupabaseEngagementProvider>
+      <TutorProvider>
+        <SupabaseEngagementProvider>
+          <SupabaseQuizTrackerProvider>{children}</SupabaseQuizTrackerProvider>
+        </SupabaseEngagementProvider>
+        <TutorCompanion />
+      </TutorProvider>
     </ReflectionProvider>
   );
 }

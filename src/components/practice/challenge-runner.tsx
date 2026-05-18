@@ -9,6 +9,7 @@ import { ChallengeHints } from "@/components/practice/challenge-hints";
 import { ChallengeTestRow } from "@/components/practice/challenge-test-row";
 import { Badge, Button, Card } from "@/components/shared/ui";
 import { TopicMarkdown } from "@/components/topic/topic-markdown";
+import { useTutorSurface } from "@/components/tutor/tutor-context";
 import { useChallengeTracker } from "@/lib/practice/challenge-tracker";
 import { usePyodideRunner } from "@/lib/pyodide/use-pyodide-runner";
 import type { CodingChallenge, ChallengeTest } from "@/types/practice";
@@ -67,6 +68,15 @@ export function ChallengeRunner({
     if (!runner.lastResults) return 0;
     return runner.lastResults.filter((r) => r.passed).length;
   }, [runner.lastResults]);
+
+  // Tutor surface: code-grounded escalation ladder on this page.
+  useTutorSurface({
+    kind: "challenge",
+    challengeSlug: challenge.slug,
+    topicSlug: challenge.topicSlugs?.[0],
+    userCode: code,
+    lastTraceback: runner.traceback ?? undefined,
+  });
 
   const canReveal = hasSubmitted || gaveUp;
   const canRun = runner.status === "ready" || runner.status === "running";
@@ -177,7 +187,7 @@ export function ChallengeRunner({
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 onClick={onRun}
-                variant="primary"
+                variant="accent"
                 className={canRun ? "" : "pointer-events-none opacity-50"}
               >
                 {runner.status === "running" ? "Running…" : "Run code"}
@@ -188,6 +198,7 @@ export function ChallengeRunner({
                   <button
                     type="button"
                     onClick={confirmResetYes}
+                    aria-label="Confirm reset to starter code"
                     className="rounded-full bg-[var(--ink)] px-2.5 py-0.5 text-[12px] font-medium text-white hover:bg-black"
                   >
                     Yes
@@ -195,6 +206,7 @@ export function ChallengeRunner({
                   <button
                     type="button"
                     onClick={confirmResetNo}
+                    aria-label="Cancel reset"
                     className="rounded-full bg-white px-2.5 py-0.5 text-[12px] font-medium text-[var(--ink-muted)] hover:text-[var(--ink)]"
                   >
                     Cancel
@@ -206,7 +218,7 @@ export function ChallengeRunner({
                 </Button>
               )}
               <Button onClick={onCopy} variant="secondary" size="sm">
-                {copied ? "Copied" : "Copy"}
+                <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
               </Button>
               {!gaveUp && !hasSubmitted && mode === "standalone" ? (
                 <Button onClick={onGiveUp} variant="ghost">
